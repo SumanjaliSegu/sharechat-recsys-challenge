@@ -1,0 +1,75 @@
+{
+ "lgb_G": [
+  [
+   "run_k2/hopred_v2emb_nopost_lr0.03_fullho_dropH_stable_nocatid_dropE_reg_ff0.5.npy",
+   "run_k2/hopred_v2emb_nopost_lr0.03_fullho_dropH_stable_nocatid_dropE_s7_reg_ff0.5.npy"
+  ],
+  [
+   "run_k2/submission_lgb_*dropE*ff0.5.csv"
+  ]
+ ],
+ "catboost": [
+  [
+   "cb_k/cb_holdout_pred.npy"
+  ],
+  [
+   "cb_k/submission_catboost_G.csv"
+  ]
+ ],
+ "nn_dcn_v1": [
+  [
+   "nn_kaggle/nn_holdout_pred.npy"
+  ],
+  [
+   "nn_kaggle/submission_nn.csv"
+  ]
+ ],
+ "nn_dcn_v2": [
+  [
+   "nn_k2/nn_holdout_pred_nopost_lr2e3_bs16k.npy"
+  ],
+  [
+   "nn_k2/submission_nn_nopost_lr2e3_bs16k.csv"
+  ]
+ ],
+ "nn_dcn_driftfix": [
+  [
+   "nndf_k/nn_holdout_pred_df_nopost.npy"
+  ],
+  [
+   "nndf_k/submission_nn_df_nopost.csv"
+  ]
+ ],
+ "nn_towers": [
+  [
+   "nn2_k/nn_holdout_pred_t_base.npy"
+  ],
+  [
+   "nn2_k/submission_nn2_t_base.csv"
+  ]
+ ],
+ "xgb": [
+  [
+   "xc_k/xgb_holdout_pred.npy"
+  ],
+  [
+   "xc_k/submission_xgb.csv"
+  ]
+ ],
+ "catboost2": [
+  [
+   "xc_k/cb2_holdout_pred.npy"
+  ],
+  [
+   "xc_k/submission_cb2.csv"
+  ]
+ ],
+ "towers_x3": [
+  [
+   "tm_k/nn_holdout_pred_t_base_s*.npy"
+  ],
+  [
+   "tm_k/submission_nn2_t_base_s*.csv"
+  ]
+ ]
+}

@@ -1,0 +1,18 @@
+# Competition data must never be committed (competition rule 4c)
+data/
+*.parquet
+sample_submission.csv
+# Outputs, predictions, models, caches
+out/
+*.npy
+*.csv
+*.txt
+lgb_full_*
+__pycache__/
+.venv/
+tmp/
+# Kaggle packaging dirs contain base64-embedded copies of the scripts
+kaggle_*/run.py
+final/*/test_preds/
+final/*/holdout_preds/
+eda_out.txt

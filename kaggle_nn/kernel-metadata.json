@@ -1,0 +1,13 @@
+{
+  "id": "sumanjalisegu/sharechat-dcn",
+  "title": "sharechat-dcn",
+  "code_file": "nn.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": false,
+  "dataset_sources": [],
+  "competition_sources": ["sharechat"],
+  "kernel_sources": []
+}
