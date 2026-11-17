@@ -185,3 +185,27 @@ Launched Kaggle CPU sharechat-knn-lgb: G lr0.03 + --knn, seeds 42/7 valid + full
 - Cold-start masking skipped: new videos have complete history columns (409-431, 480-515 0% null, same as seen), only smaller counters -> masking would create inputs never seen at test.
 - Fixed Blend v4a (v3 + KNN LGB group) holdout 0.84113 -> public 0.83461; v4b (+ Optuna slow LGB group) 0.84112 -> public 0.83461. v3 (0.83462) stays best.
 - Overnight: Kaggle CPU sharechat-knn-slow (lr0.01 all rows --ist --knn, seeds 42/7, valid+full); Kaggle GPU sharechat-repro-gpu (run_all.py --only xgb/catboost/nn end-to-end reproduction).
+
+## 2026-11-17 morning — overnight results
+- **Slow KNN LGB** (Kaggle sharechat-knn-slow, lr0.01 --ist --neg=1.0 --knn, seeds 42/7): holdout 0.84015 / 0.84014 vs slow LGB without KNN 0.84024 → slightly worse alone.
+  In Blend v3 (plain / test-mix): v3 0.84112/0.84002; +slowKNN group 0.84111/0.84000; in slow group 0 0.84112/0.84001; +both KNN groups 0.84112/0.84001. **No gain → no v5, not submitted.** KNN line closed.
+- **GPU reproduction** (Kaggle sharechat-repro-gpu, run_all.py --only xgb/catboost/nn): not bit-identical (GPU nondeterminism; spearman 0.997–1.000, DCN 0.976), single-model AUCs within ±0.0002 (DCN −0.0006).
+  v3 blend with reproduced XGB/CatBoost/NN files: **0.84113 vs frozen 0.84112 → reproduction PASSED.**
+- Official rank 17 Nov 11:28 IST: 29/46, public 0.83462 (Blend v3). 22 teams ≥ 0.88; nearest above 0.83476 (#26), 0.83528–0.83567 (#22–25).
+
+## 2026-11-17 — "are we missing a clue?" check
+- Persistent-user-id hunt: every string column scanned (cardinality, rows/value, values/request, train→holdout/test coverage, train-rate AUC). feature5 = 421k values, 3.7 rows each, 1.00 per request, 5% holdout seen, AUC 0.507 → a session id, no persistent user exists. Best item keys already used (f18/f24 0.70, f20 0.67, f23 0.62).
+- Forum (read 17 Nov): host ysaraf: "the eval is intended to run on each row of the eval set independently of the other rows". Host Avishek Pal (2 d ago): "Only request_id-derived features are not allowed." Thread 758976: the teams then ranked 16th and 20th (both ≥0.88) wrote publicly that they had used request-level features and dropped them; host: non-compliant solutions rejected, valid ones move up. Public LB keeps old best scores.
+
+## 2026-11-17 — TabM launched
+nn2_multi.py: added arch="tabm" (BatchEnsemble MLP, k=16, 3x512, drop 0.1, lr 2e-3, wd 3e-4; flat input = numeric ranks + cat embeddings + raw 2x7x32 embeddings + cos/bilinear). Smoke (20k rows): tabm 0.817 vs towers 0.812. Kaggle sharechat-tabm (GPU): NNARMS=tabm, seeds 0,1,2 -> nn_holdout_pred_t_tabm_s*.npy, submission_nn2_t_tabm_s*.csv.
+- TabM result: seeds 0.8329/0.8317/0.8317 (3-seed rank-avg 0.83353) vs networks component 0.83702; spearman 0.984. In Blend v3: as nn group 0.84111/0.84000, extra 5% 0.84111/0.84000, 10% 0.84105 → **no gain, not submitted.**
+- Recent-window video rates (holdout, single-feature AUC): all-history 0.7016 · last 24h 0.6909 · 12h 0.6842 · 6h 0.6685 (worse in both early and late holdout hours). All-history rates already gave no model gain → recency stats dropped, not built.
+
+## 2026-11-17 afternoon — controlled seed experiment (option C), rules fixed BEFORE results
+Policy: Blend v3 = primary, v2b = backup. Only change the blend on a measured validation gain.
+(Option B "user-type split" was already tested 16 Nov — segment specialists 0.83907 vs global 0.83977 → not repeated.)
+Launched: Kaggle sharechat-lgb-seeds2 (CPU; slow LGB lr0.01 --ist --neg=1.0, seeds 11/23/2026, valid + full) and sharechat-xgb-seeds2 (GPU; xgb_seeds.py XSEED 4/5/6).
+Acceptance rule (decided in advance): add the seeds to their existing groups (slow LGB group 0, XGB group) →
+Blend v5 only if holdout gain >= +0.0002 on BOTH plain and test-mix, and every new seed's single AUC is within 0.0005 of the existing seeds.
+Otherwise v3 stays and nothing is submitted. Either way: no other blend changes.

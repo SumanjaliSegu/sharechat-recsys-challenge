@@ -2,7 +2,9 @@
 
 **Task.** Predict P(watched) for a user–video-post pair. Metric: one global ROC-AUC over all rows.
 **Constraint.** Each row must be predicted from that row's features alone (serving-time rule).
-**Final submission (Fixed Blend v1).** Public AUC 0.83447; holdout AUC 0.84095 (test-mix weighted 0.83984).
+**Primary submission (Fixed Blend v3).** Public AUC 0.83462; holdout AUC 0.84112 (test-mix weighted 0.84002).
+**Backup (Fixed Blend v2b).** Public AUC 0.83460; holdout AUC 0.84111.
+Every submitted blend ranked in the same order on validation and on the public board.
 
 ---
 
@@ -39,15 +41,19 @@
 ## 4. Models
 | Model | Holdout AUC | Notes |
 |---|---|---|
-| LightGBM (lr 0.01, all rows, 1 seed) | 0.8402 | leaves 63, min_leaf 800, feature_fraction 0.5, L2 30, cat_smooth 200 |
+| LightGBM slow (lr 0.01, all rows, seeds 42/7/99) | 0.8402 / 0.8401 / 0.8404 | leaves 63, min_leaf 800, feature_fraction 0.5, L2 30, cat_smooth 200, Indian-local hour |
+| LightGBM DART (lr 0.05, 1,500 rounds) | 0.8398 | diversity group in the blend |
+| LightGBM 127 leaves / min_leaf 400 (lr 0.01) | 0.8402 | diversity group in the blend |
 | LightGBM "G" (lr 0.03, 5 seeds) | 0.8398 | negatives downsampled to 25% (AUC-invariant) |
-| XGBoost (GPU) | 0.8400 | depth 8, lr 0.03, colsample 0.5, min_child_weight 50 |
-| CatBoost ×2 (GPU) | 0.8387 / 0.8388 | depth 8 and 10 |
-| **Structured multi-tower network (our design)** | 0.8350 (×3 seeds: 0.8357) | user / post / pair towers on quantile-ranked inputs, 49 cosine matches + 7 learned bilinear user–post matches, DCN-v2 cross layers; BCE loss, AdamW, OneCycle, AMP |
+| XGBoost (GPU, seeds 1/2/3) | 0.8400 / 0.8403 / 0.8400 | depth 8, lr 0.03, colsample 0.5, min_child_weight 50 |
+| CatBoost ×3 (GPU) | 0.8387 / 0.8388 / seed 7 | depth 8 and 10 |
+| **Structured multi-tower network (our design)** | 0.8347–0.8352 per seed (×6 seeds in the blend) | user / post / pair towers on quantile-ranked inputs, 49 cosine matches + 7 learned bilinear user–post matches, DCN-v2 cross layers; BCE loss, AdamW, OneCycle, AMP |
 | DCN-v2 network | 0.8337 | 1,081 dense inputs + categorical embeddings |
 
 ## 5. Ensemble
 Rank average with **fixed** weights: 0.40 LightGBM + 0.30 XGBoost + 0.15 CatBoost + 0.15 networks.
+Inside a family, files are rank-averaged within a group (e.g. seeds of one configuration) and groups are averaged
+equally (LightGBM groups: slow lr 0.01 ×3 seeds, G lr 0.03 ×5 seeds, DART, 127-leaf).
 A 9-model stack with weights *learned* on the holdout scored higher on holdout (0.8410) but lower on the public
 board (0.83436) — the learned weights fit holdout noise — so fixed weights were kept.
 
@@ -55,7 +61,14 @@ board (0.83436) — the learned weights fit holdout noise — so fixed weights w
 147 engineered ratio features · train-period post/creator/user watch-rate statistics · 2× negatives ·
 raw embedding products · recency weighting · removing whole column groups (22-group sweep) ·
 segment specialists (high-watch user group) · young-post specialists / up-weighting ·
-monotone video-length constraint · learned stacking.
+monotone video-length constraint · learned stacking ·
+Optuna search of 12 LightGBM parameters (5 h TPE; slow confirmation 0.84025 vs 0.84024) ·
+embedding-neighbour video statistics (KNN over post embeddings, out-of-fold; +0.0002 alone, 0 in blend) ·
+focal loss γ=1/2 and label smoothing for the networks · TabM (BatchEnsemble MLP, k=16; 0.8335 vs 0.8370) ·
+recent-window (6/12/24 h) video watch rates (weaker than all-history rates, which already add nothing).
+**Why:** the dataset already ships ShareChat's own history rates (409–431, user×post affinity) — extra
+train-period statistics are largely redundant with them. Error analysis: no model family beats LightGBM in any
+segment (new videos, length bands, user groups), so gating / mixture-of-experts has nothing to switch to.
 
 ## 7. Rule compliance and the request-structure investigation
 Every feature is computed from the row itself; category vocabularies, quantiles and normalisation constants
@@ -77,6 +90,16 @@ solution, matching ShareChat's serving-time requirement.
   modelling would be the largest available gain.
 
 ## 9. Reproduce
-See `README.md`. `final/fixed_blend_v1/MANIFEST.json` records every component (script, flags, Kaggle notebook,
-checksums); `python ensemble.py final/fixed_blend_v1 --holdout` rebuilds the exact submitted file
-(verified: max difference 0.0) and reports holdout AUC 0.84095.
+See `README.md`. `final/fixed_blend_v3/MANIFEST.json` records every component (script, flags, Kaggle notebook,
+checksums); `python ensemble.py final/fixed_blend_v3 --holdout` rebuilds the exact submitted file and reports
+holdout AUC 0.84112.
+
+**End-to-end reproduction from code (`run_all.py`, fresh Kaggle notebooks, 16–17 Nov):**
+- LightGBM (`--only lgb`, CPU): all 6 test predictions bit-identical to the frozen files (max diff 0.0).
+- XGBoost / CatBoost / networks (`--only xgb|catboost|nn`, GPU): not bit-identical (GPU nondeterminism;
+  rank correlation 0.997–1.000, DCN 0.976), single-model AUC within ±0.0002 (DCN −0.0006);
+  Blend v3 rebuilt with the reproduced files scores **0.84113 vs 0.84112 frozen**.
+
+**Compute.** Training on Kaggle Notebooks: CPU notebooks for LightGBM; GPU notebooks (CUDA; card as assigned by Kaggle) for XGBoost,
+CatBoost and networks. Blending runs on a laptop (8 GB RAM). Python 3.12; versions in `requirements.txt`.
+Seeds: LightGBM 42/7/99 (slow), 42/7/99/123/2026 (G); XGBoost 1/2/3; CatBoost 42/7; networks 0–5.

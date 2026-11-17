@@ -188,6 +188,47 @@ class Towers(nn.Module):
         return self.head(x).squeeze(1)
 
 
+class BELinear(nn.Module):
+    """BatchEnsemble linear layer (TabM): shared W, per-member input/output scaling r_k, s_k and bias b_k."""
+    def __init__(self, d_in, d_out, k, init_r=True):
+        super().__init__()
+        self.lin = nn.Linear(d_in, d_out, bias=False)
+        self.r = nn.Parameter(torch.ones(k, d_in) if not init_r else 1 + 0.1 * torch.randn(k, d_in).sign() * torch.rand(k, d_in))
+        self.s = nn.Parameter(torch.ones(k, d_out))
+        self.b = nn.Parameter(torch.zeros(k, d_out))
+
+    def forward(self, x):  # x: (n, k, d_in)
+        return self.lin(x * self.r) * self.s + self.b
+
+
+class TabM(nn.Module):
+    """TabM (Gorishniy et al. 2024): parameter-efficient ensemble of k MLPs over one flat row vector."""
+    K = 16
+
+    def __init__(self, n_user, n_post, n_pair, ucards, pcards, drop=0.3, H=512, nocat_post_id=False):
+        super().__init__()
+        k = self.K
+        self.ue = nn.ModuleList(nn.Embedding(c, edim(c)) for c in ucards)
+        self.pe = nn.ModuleList(nn.Embedding(c, edim(c)) for c in pcards)
+        d = n_user + n_post + n_pair + sum(edim(c) for c in ucards) + sum(edim(c) for c in pcards) + 2 * 7 * 32 + 49 + 7
+        self.W = nn.Parameter(torch.randn(7, 32, 32) * 0.02 + torch.eye(32)[None])
+        self.l1, self.l2, self.l3 = BELinear(d, H, k), BELinear(H, H, k, False), BELinear(H, H, k, False)
+        self.out = BELinear(H, 1, k, False)
+        self.drop = nn.Dropout(drop); self.edrop = nn.Dropout(0.1)
+
+    def forward(self, xu, xp, xr, cu, cp, U, P):
+        eu = torch.cat([m(cu[:, i]) for i, m in enumerate(self.ue)], 1)
+        ep = torch.cat([m(cp[:, i]) for i, m in enumerate(self.pe)], 1)
+        Un = nn.functional.normalize(U, dim=-1); Pn = nn.functional.normalize(P, dim=-1)
+        cos = torch.einsum("nud,npd->nup", Un, Pn).flatten(1)
+        bil = torch.einsum("nkd,kde,nke->nk", U, self.W, P) / 32.0
+        x = torch.cat([xu, xp, xr, self.edrop(eu), self.edrop(ep), U.flatten(1), P.flatten(1), cos, bil], 1)
+        x = x[:, None, :].expand(-1, self.K, -1)
+        for l in (self.l1, self.l2, self.l3):
+            x = self.drop(nn.functional.relu(l(x)))
+        return self.out(x).squeeze(-1)  # (n, k) logits; training averages member losses, predict averages probs
+
+
 KEYS = ("user", "post", "pair", "ucat", "pcat", "U", "P")
 
 
@@ -201,19 +242,21 @@ def predict(model, X, bs=16384):
     with torch.no_grad():
         for i in range(0, n, bs):
             idx = np.arange(i, min(i + bs, n))
-            out.append(torch.sigmoid(model(*batch(X, idx)).float()).cpu().numpy())
+            z = torch.sigmoid(model(*batch(X, idx)).float())
+            out.append((z.mean(1) if z.dim() == 2 else z).cpu().numpy())
     return np.concatenate(out)
 
 
 def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=192, seed=0, nopost=False,
-          gamma=0.0, ls=0.0):
+          gamma=0.0, ls=0.0, arch="towers"):
     if SMOKE:
         bs = 512
     torch.manual_seed(seed); np.random.seed(seed)
     ucards, pcards = cards
     if nopost:
         pcards = list(pcards); pcards[0] = 1
-    model = Towers(X["user"].shape[1], X["post"].shape[1], X["pair"].shape[1], ucards, pcards, drop, H).to(DEV)
+    M = TabM if arch == "tabm" else Towers
+    model = M(X["user"].shape[1], X["post"].shape[1], X["pair"].shape[1], ucards, pcards, drop, H).to(DEV)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
     steps = epochs * math.ceil(len(y) / bs)
     sched = torch.optim.lr_scheduler.OneCycleLR(opt, max_lr=lr, total_steps=steps, pct_start=0.15)
@@ -237,7 +280,8 @@ def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=
                 xs[4] = xs[4].clone(); xs[4][:, 0] = 0
             t = torch.from_numpy(y[idx]).to(DEV)
             with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=amp):
-                loss = lossf(model(*xs).float(), t)
+                zz = model(*xs).float()
+                loss = lossf(zz, t[:, None].expand_as(zz) if zz.dim() == 2 else t)
             opt.zero_grad(set_to_none=True)
             scaler.scale(loss).backward(); scaler.unscale_(opt)
             nn.utils.clip_grad_norm_(model.parameters(), 1.0)
@@ -254,9 +298,10 @@ def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=
 
 if __name__ == "__main__":
     ARMS = {"base": dict(gamma=0.0, ls=0.0), "focal1": dict(gamma=1.0, ls=0.0), "focal2": dict(gamma=2.0, ls=0.0),
-            "ls01": dict(gamma=0.0, ls=0.01)}
-    CONFIGS = [dict(name=f"t_{arm}_s{sd}", lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=192, nopost=False, epochs=6, seed=sd,
-                    **ARMS[arm])
+            "ls01": dict(gamma=0.0, ls=0.01),
+            "tabm": dict(gamma=0.0, ls=0.0, arch="tabm", H=512, drop=0.1, lr=2e-3, wd=3e-4)}
+    CONFIGS = [{**dict(name=f"t_{arm}_s{sd}", lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=192, nopost=False, epochs=6, seed=sd,
+                     arch="towers"), **ARMS[arm]}
                for arm in os.environ.get("NNARMS", "base").split(",")
                for sd in tuple(int(x) for x in os.environ.get("TSEEDS", "0,1,2").split(","))]
     if SMOKE:
@@ -277,7 +322,7 @@ if __name__ == "__main__":
     np.save(f"{OUT}/nn_holdout_rn.npy", rn[~is_tr])
     results = {}
     for cfg in CONFIGS:
-        hp = {k: cfg[k] for k in ("lr", "bs", "wd", "drop", "H", "nopost", "seed", "gamma", "ls")}
+        hp = {k: cfg[k] for k in ("lr", "bs", "wd", "drop", "H", "nopost", "seed", "gamma", "ls", "arch")}
         log(f"== {cfg['name']} {hp}")
         _, hist = train(Xtr, ytr, prep.cards(), cfg["epochs"], val=(Xho, yho), **hp)
         be = int(np.argmax(hist)) + 1
@@ -298,7 +343,7 @@ if __name__ == "__main__":
     tt = read(TEST, 5000 if SMOKE else None); ids = tt["id"].to_numpy(); bt = prepare(tt); del tt
     Xt = prep.transform(bt); del bt
     for cfg in CONFIGS:
-        hp = {k: cfg[k] for k in ("lr", "bs", "wd", "drop", "H", "nopost", "seed", "gamma", "ls")}
+        hp = {k: cfg[k] for k in ("lr", "bs", "wd", "drop", "H", "nopost", "seed", "gamma", "ls", "arch")}
         be = results[cfg["name"]]["best_epoch"]
         log(f"full: {len(y):,} rows, {be} epochs, {cfg['name']}")
         model, _ = train(X, y, prep.cards(), be, **hp)
