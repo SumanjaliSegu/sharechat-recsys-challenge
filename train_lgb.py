@@ -392,7 +392,8 @@ if KNN:
     TAG += "_knn"
 OPTP = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--params=")), None)  # tuned params (Optuna) JSON
 if OPTP:
-    PARAMS.update(json.load(open(OPTP))); TAG += "_opt"
+    PARAMS.update(json.load(open(OPTP)))
+    TAG += "_opt" if "optuna" in OPTP else "_" + _os.path.splitext(_os.path.basename(OPTP))[0]
 
 ITERS = next((int(a.split("=")[1]) for a in sys.argv if a.startswith("--iters=")), None)
 

@@ -229,6 +229,47 @@ class TabM(nn.Module):
         return self.out(x).squeeze(-1)  # (n, k) logits; training averages member losses, predict averages probs
 
 
+class GTF(nn.Module):
+    """Feature-group Transformer: numeric columns in chunks of 16, each categorical, each user / post
+    embedding and each user*post embedding product become one token; a CLS token reads the result."""
+    D, CH = 64, 16
+
+    def __init__(self, n_user, n_post, n_pair, ucards, pcards, drop=0.1, H=128, nocat_post_id=False):
+        super().__init__()
+        D, CH = self.D, self.CH
+        self.sizes = [n_user, n_post, n_pair]
+        self.nch = [math.ceil(n / CH) for n in self.sizes]
+        self.Wn = nn.ParameterList(nn.Parameter(torch.randn(k, CH, D) * CH ** -0.5) for k in self.nch)
+        self.bn = nn.ParameterList(nn.Parameter(torch.zeros(k, D)) for k in self.nch)
+        self.ue = nn.ModuleList(nn.Embedding(c, D) for c in ucards)
+        self.pe = nn.ModuleList(nn.Embedding(c, D) for c in pcards)
+        self.WU = nn.Parameter(torch.randn(7, 32, D) * 32 ** -0.5)
+        self.WP = nn.Parameter(torch.randn(7, 32, D) * 32 ** -0.5)
+        self.WX = nn.Parameter(torch.randn(7, 32, D) * 32 ** -0.5)
+        n_tok = sum(self.nch) + len(ucards) + len(pcards) + 21
+        self.pos = nn.Parameter(torch.randn(n_tok, D) * 0.02)
+        self.cls = nn.Parameter(torch.zeros(1, 1, D))
+        layer = nn.TransformerEncoderLayer(D, 4, H, drop, batch_first=True, norm_first=True, activation="gelu")
+        self.enc = nn.TransformerEncoder(layer, 3)
+        self.head = nn.Sequential(nn.LayerNorm(D), nn.Linear(D, 64), nn.GELU(), nn.Linear(64, 1))
+
+    def _num(self, x, i):
+        k, CH = self.nch[i], self.CH
+        x = nn.functional.pad(x, (0, k * CH - x.shape[1])).view(-1, k, CH)
+        return torch.einsum("nkc,kcd->nkd", x, self.Wn[i]) + self.bn[i]
+
+    def forward(self, xu, xp, xr, cu, cp, U, P):
+        Un = nn.functional.normalize(U, dim=-1); Pn = nn.functional.normalize(P, dim=-1)
+        toks = [self._num(xu, 0), self._num(xp, 1), self._num(xr, 2),
+                torch.stack([m(cu[:, i]) for i, m in enumerate(self.ue)], 1),
+                torch.stack([m(cp[:, i]) for i, m in enumerate(self.pe)], 1),
+                torch.einsum("nkc,kcd->nkd", U, self.WU), torch.einsum("nkc,kcd->nkd", P, self.WP),
+                torch.einsum("nkc,kcd->nkd", Un * Pn * 32 ** 0.5, self.WX)]
+        t = torch.cat(toks, 1) + self.pos
+        t = torch.cat([self.cls.expand(len(t), -1, -1), t], 1)
+        return self.head(self.enc(t)[:, 0]).squeeze(1)
+
+
 KEYS = ("user", "post", "pair", "ucat", "pcat", "U", "P")
 
 
@@ -255,7 +296,7 @@ def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=
     ucards, pcards = cards
     if nopost:
         pcards = list(pcards); pcards[0] = 1
-    M = TabM if arch == "tabm" else Towers
+    M = {"tabm": TabM, "gtf": GTF}.get(arch, Towers)
     model = M(X["user"].shape[1], X["post"].shape[1], X["pair"].shape[1], ucards, pcards, drop, H).to(DEV)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
     steps = epochs * math.ceil(len(y) / bs)
@@ -299,7 +340,8 @@ def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=
 if __name__ == "__main__":
     ARMS = {"base": dict(gamma=0.0, ls=0.0), "focal1": dict(gamma=1.0, ls=0.0), "focal2": dict(gamma=2.0, ls=0.0),
             "ls01": dict(gamma=0.0, ls=0.01),
-            "tabm": dict(gamma=0.0, ls=0.0, arch="tabm", H=512, drop=0.1, lr=2e-3, wd=3e-4)}
+            "tabm": dict(gamma=0.0, ls=0.0, arch="tabm", H=512, drop=0.1, lr=2e-3, wd=3e-4),
+            "gtf": dict(gamma=0.0, ls=0.0, arch="gtf", H=128, drop=0.1, lr=1e-3, wd=1e-4, bs=2048, epochs=8)}
     CONFIGS = [{**dict(name=f"t_{arm}_s{sd}", lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=192, nopost=False, epochs=6, seed=sd,
                      arch="towers"), **ARMS[arm]}
                for arm in os.environ.get("NNARMS", "base").split(",")

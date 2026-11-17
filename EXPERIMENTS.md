@@ -209,3 +209,21 @@ Launched: Kaggle sharechat-lgb-seeds2 (CPU; slow LGB lr0.01 --ist --neg=1.0, see
 Acceptance rule (decided in advance): add the seeds to their existing groups (slow LGB group 0, XGB group) →
 Blend v5 only if holdout gain >= +0.0002 on BOTH plain and test-mix, and every new seed's single AUC is within 0.0005 of the existing seeds.
 Otherwise v3 stays and nothing is submitted. Either way: no other blend changes.
+
+## 2026-11-17 evening — fresh "what did we miss" audit (data checks)
+- Raw epoch columns: feature57 = user signup time (1 value per request), feature58/59 = video upload time (1 value per video). No per-impression timestamp → no hidden feed position. Gap features AUC 0.45–0.51.
+- All ~580 numeric columns (incl. ones dropped in G): max |corr| with position *within* request = 0.01 → no row-local column encodes position. Request size correlates ~0.35 with user activity columns (153, 152, 117, 320) — already used.
+- User-group × video train rates (f6, f7, f10, f11, f13, f14, f16, f17, f8 × f18): global AUC 0.64–0.67 (< video rate 0.70); size-weighted AUC *inside* videos 0.497–0.503 → zero information beyond the video rate. Dropped.
+- RESULT (18 Nov 00:50): LGB seeds 11/23/2026 = 0.84015/0.84038/0.84021; XGB seeds 4/5/6 = 0.84002/0.84006/0.84012 (all within 0.0005 of existing seeds). Blend: v3 0.84112/0.84002 · +LGB 0.84113/0.84002 · +XGB 0.84113/0.84002 · +both 0.84114/0.84003 (+0.00001). Below the +0.0002 rule → **v3 kept, nothing submitted.** Seed averaging is saturated.
+- Public Code tab (18 Nov): only 1 public notebook (avikdas567 "Latent Tensor Geometry & Temporal RecSys Stacking", 11 Nov). Features: raw numeric + per-pair embedding dot/cos/L2/norms + OOF post(f18)/f23 target rates + hour sin/cos + 3 ratios; LGB/XGB/NN rank blend. Its own reported validation: LGB 0.8261, XGB 0.8266, NN 0.8242, blend 0.8279 (ours 0.8411 on a comparable time holdout). Nothing in it we lack (L2 distance is the only extra; derivable from our dot+norms).
+- Forum question posted 18 Nov ~01:00 IST (user approved): https://www.kaggle.com/competitions/sharechat/discussion/759936 — asks host for ShareChat row-level baseline AUC and whether request_id may be used in training only (ranking group / distillation) with row-independent inference.
+- Launched Kaggle sharechat-distill-valid (CPU, VALIDATION ONLY, distill.py): teacher = LGB + request size/pos/rows-per-user, OOF 4 folds grouped by feature5; students row-only: S0 hard, S1 0.5y+0.5teacher, S2 teacher (cross_entropy), L1 lambdarank grouped by request. Rule: submit only if host OKs training-time request_id AND student gains >= +0.0005 over S0 (and in blend).
+- 18 Nov: post edited (user approved) to a neutral version — title "Question on request_id usage and row-level baseline"; removed our score and the named techniques. 0 comments at edit time.
+
+## 2026-11-18 ~01:30 — where exactly are we stuck? (Blend v3, validation day)
+- Overall 0.8411. Video-only part (each row = its video's mean score) 0.7646.
+- Inside-video AUC (which user watches a given video) **0.7373** (60% of rows in mixed-outcome videos) → main weakness = user side.
+- Inside-request AUC (which of a request's videos is watched) 0.7152 (13% of rows).
+- Length bands: <60 s 0.7846 · 60–119 s 0.7904 · 120 s+ 0.8272.
+- "Oracle" same-day video watch rate looked like 0.856 but that included each row's own label; leave-own-row-out = **0.7063** → better video-popularity estimation is NOT the missing piece. Same-day video impression counts: AUC 0.489, hurt the blend (0.8256) — and would be test statistics anyway.
+New model families launched: Kaggle sharechat-gtf (GPU; feature-group Transformer, arch "gtf": ~78 tokens = numeric chunks of 16 + categoricals + 7 user/7 post/7 product embedding tokens, 3 layers d=64, lr 1e-3, bs 2048, 8 epochs, seeds 0,1) and sharechat-lgb-linear (CPU; LightGBM linear_tree, G lr0.03 --ist, valid + full). Smoke (15k rows, 30 steps): gtf 0.598 vs towers 0.812 — slow start expected at that size.
