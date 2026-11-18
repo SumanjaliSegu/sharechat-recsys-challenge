@@ -241,3 +241,11 @@ Holdout (plain / test-mix). Blend v3 = 0.84112 / 0.84002. Acceptance bar: +0.000
 - Time-decay check on the holdout (6 h buckets, v3 components): no decay with time (0–6 h 0.854, 6–12 h 0.839, 12–18 h 0.839, 18–24 h 0.841, same shape for every family).
   New-video share rises 2%→13% through the day. Family ranking is the same in every bucket (LGB≈XGB > CB > NN) → no family holds up better later; reweighting by holdout time is pointless.
   Holdout covers only 0–1 day after training; test is 0–3 days → only public single-family submissions can show whether a family decays more slowly on days 2–3.
+- **Single-family public diagnostics (18 Nov, user OK, 4 subs)** — Blend v3 components submitted alone:
+  | component | holdout plain | public | drop |
+  | LightGBM | 0.84069 | 0.83435 | 0.00634 |
+  | XGBoost  | 0.84060 | 0.83411 | 0.00649 |
+  | CatBoost | 0.83964 | 0.83278 | 0.00686 |
+  | networks | 0.83702 | pending | |
+  | Blend v3 | 0.84112 | 0.83462 | 0.00650 |
+  Drop is uniform (±0.0003) → no family holds up better on days 2–3; reweighting will not help. Holdout ranks families correctly for test.
