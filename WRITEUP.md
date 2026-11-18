@@ -65,7 +65,15 @@ monotone video-length constraint · learned stacking ·
 Optuna search of 12 LightGBM parameters (5 h TPE; slow confirmation 0.84025 vs 0.84024) ·
 embedding-neighbour video statistics (KNN over post embeddings, out-of-fold; +0.0002 alone, 0 in blend) ·
 focal loss γ=1/2 and label smoothing for the networks · TabM (BatchEnsemble MLP, k=16; 0.8335 vs 0.8370) ·
-recent-window (6/12/24 h) video watch rates (weaker than all-history rates, which already add nothing).
+recent-window (6/12/24 h) video watch rates (weaker than all-history rates, which already add nothing) ·
+linear-leaf LightGBM (best single LightGBM, 0.8403, but +0.00004 in the blend) ·
+feature-group Transformer (0.8314) · extra seeds (+0.00001; seed averaging saturated) ·
+network-heavier blend weights (public 0.83461 vs 0.83462) ·
+pseudo-labelling, validation only (holdout day used as unlabelled data; +0.0002 alone, which disappears at
+equal boosting rounds, 0 in the blend — never used on test).
+**Drop from validation to public is uniform:** each family submitted alone loses 0.0059–0.0069
+(LightGBM 0.84069→0.83435, XGBoost 0.84060→0.83411, CatBoost 0.83964→0.83278, networks 0.83702→0.83116),
+and validation AUC shows no decay across the 24 h holdout → no family is under-weighted for the later test days.
 **Why:** the dataset already ships ShareChat's own history rates (409–431, user×post affinity) — extra
 train-period statistics are largely redundant with them. Error analysis: no model family beats LightGBM in any
 segment (new videos, length bands, user groups), so gating / mixture-of-experts has nothing to switch to.
@@ -79,6 +87,8 @@ To understand the ~0.888 public scores we ran **diagnostics that were never subm
   0.840 to **0.8875**;
 - a model predicting request size / position **from row features alone** reaches R² 0.32 / 0.15; the
   row-predicted size carries AUC 0.638 versus 0.759 for the true size.
+- teacher–student check (validation only): a teacher that sees request features scores 0.886 out-of-fold, but
+  a row-only student trained on its soft labels gains only +0.0004 alone and 0 in the blend.
 **Conclusion:** the part of request structure visible in a row is already used by our model; the remaining
 signal exists only across rows, which the competition prohibits. We therefore kept a strictly row-independent
 solution, matching ShareChat's serving-time requirement.
