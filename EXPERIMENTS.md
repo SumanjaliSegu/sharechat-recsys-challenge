@@ -227,3 +227,13 @@ Otherwise v3 stays and nothing is submitted. Either way: no other blend changes.
 - Length bands: <60 s 0.7846 · 60–119 s 0.7904 · 120 s+ 0.8272.
 - "Oracle" same-day video watch rate looked like 0.856 but that included each row's own label; leave-own-row-out = **0.7063** → better video-popularity estimation is NOT the missing piece. Same-day video impression counts: AUC 0.489, hurt the blend (0.8256) — and would be test statistics anyway.
 New model families launched: Kaggle sharechat-gtf (GPU; feature-group Transformer, arch "gtf": ~78 tokens = numeric chunks of 16 + categoricals + 7 user/7 post/7 product embedding tokens, 3 layers d=64, lr 1e-3, bs 2048, 8 epochs, seeds 0,1) and sharechat-lgb-linear (CPU; LightGBM linear_tree, G lr0.03 --ist, valid + full). Smoke (15k rows, 30 steps): gtf 0.598 vs towers 0.812 — slow start expected at that size.
+
+## 2026-11-18 — results of distill-valid / GTF / linear-tree LGB
+Holdout (plain / test-mix). Blend v3 = 0.84112 / 0.84002. Acceptance bar: +0.0002 on both.
+- **Linear-leaf LightGBM** (G + lr0.03 + ist + linear_tree, lambda 1): single 0.84027 (vs G lr0.03 ist ≈0.83995, +0.0003).
+  Spearman 0.996 with the LGB component. As an extra LGB group: 0.84116 / 0.84005 (+0.00004/+0.00003) → below bar, NOT adopted.
+- **GTF group Transformer** (2 seeds): single 0.8314 (best epoch 3, then overfits). As a networks group: 0.84111 / 0.84000 → no gain; extra weight hurts. NOT adopted.
+- **Distillation (validation only)**: teacher OOF 0.8861 (with request features). Row-only students: S0 hard 0.83934, S1 soft50 0.83972 (+0.0004, below the +0.0005 bar), S2 soft100 0.83931.
+  S1 inside Blend v3: 0.84111 / 0.84001 → no gain. Lambdarank stopped at iter 2 (0.732): broken setup, not worth fixing given the S1 result.
+  Conclusion: teacher knowledge of request structure does NOT transfer to a row-only model in a useful way. Not submitted (and would need host OK anyway).
+- Forum 759936: 0 replies. Official rank 33/54, public 0.83462 (v3). No change.
