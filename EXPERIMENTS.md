@@ -260,3 +260,5 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   Rule: add as a LightGBM group in v3 → freeze v5 and submit only if ≥ +0.0002 on both plain and test-mix. Pseudo-label result: never submitted without host OK.
 - **Pseudo-label RESULT** (S0 0.83934): P1 soft w1 0.83953 (+0.0002; at S0's 216 iters 0.83933 = 0 → gain is only from more rounds) · P2 w0.3 0.83939 · P3 confident hard 0.83794 ✗ · P4 two rounds 0.83946.
   In Blend v3: P1 0.84111/0.84000, P4 0.84109/0.83999 vs 0.84112/0.84002 → **no gain. Pseudo-labelling closed; no host question needed.**
+- 19 Nov: slow linear-tree LGB seed 42 (lr 0.01, all negatives): **0.83715**, best iter 183 (stops early, worse than lr0.03 version 0.84027); in Blend v3 0.84103/0.83992 ✗. Seed 7 still running — irrelevant. Linear-tree line closed. Nothing submitted.
+- Laptop watcher stopped for low system memory (8 GB laptop); not restarted.
