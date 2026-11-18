@@ -256,3 +256,5 @@ Launched Kaggle CPU sharechat-pseudo-valid (pseudo.py): holdout day = unlabelled
 Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain survives inside Blend v3; then ask host before any submission. Otherwise close.
   Networks lose least (0.0059 vs 0.0063–0.0069) → small hint that more network weight may transfer slightly better; NN-heavier blend was −0.00006 on holdout (16 Nov).
 - v5nn (v3 files, NN weight 0.25): holdout 0.84109/0.83997 → **public 0.83461** (v3 0.83462). Network weighting closed.
+- Overnight 18→19 Nov: launched Kaggle CPU sharechat-lgb-linslow-s42 / -s7 (linear-tree LGB, lr 0.01, all negatives, ist; valid + full).
+  Rule: add as a LightGBM group in v3 → freeze v5 and submit only if ≥ +0.0002 on both plain and test-mix. Pseudo-label result: never submitted without host OK.
