@@ -237,3 +237,7 @@ Holdout (plain / test-mix). Blend v3 = 0.84112 / 0.84002. Acceptance bar: +0.000
   S1 inside Blend v3: 0.84111 / 0.84001 → no gain. Lambdarank stopped at iter 2 (0.732): broken setup, not worth fixing given the S1 result.
   Conclusion: teacher knowledge of request structure does NOT transfer to a row-only model in a useful way. Not submitted (and would need host OK anyway).
 - Forum 759936: 0 replies. Official rank 33/54, public 0.83462 (v3). No change.
+- Holdout→public drop is a steady ~0.0065 for every submitted blend (v1–v4b), no single-family public scores yet.
+- Time-decay check on the holdout (6 h buckets, v3 components): no decay with time (0–6 h 0.854, 6–12 h 0.839, 12–18 h 0.839, 18–24 h 0.841, same shape for every family).
+  New-video share rises 2%→13% through the day. Family ranking is the same in every bucket (LGB≈XGB > CB > NN) → no family holds up better later; reweighting by holdout time is pointless.
+  Holdout covers only 0–1 day after training; test is 0–3 days → only public single-family submissions can show whether a family decays more slowly on days 2–3.
