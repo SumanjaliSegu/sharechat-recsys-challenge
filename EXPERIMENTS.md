@@ -246,7 +246,7 @@ Holdout (plain / test-mix). Blend v3 = 0.84112 / 0.84002. Acceptance bar: +0.000
   | LightGBM | 0.84069 | 0.83435 | 0.00634 |
   | XGBoost  | 0.84060 | 0.83411 | 0.00649 |
   | CatBoost | 0.83964 | 0.83278 | 0.00686 |
-  | networks | 0.83702 | pending | |
+  | networks | 0.83702 | 0.83116 | 0.00586 |
   | Blend v3 | 0.84112 | 0.83462 | 0.00650 |
   Drop is uniform (±0.0003) → no family holds up better on days 2–3; reweighting will not help. Holdout ranks families correctly for test.
 
@@ -254,3 +254,4 @@ Holdout (plain / test-mix). Blend v3 = 0.84112 / 0.84002. Acceptance bar: +0.000
 Rules check (read 18 Nov): Overview "Important Note" = serving-time info only, each row predicted independently using only its own features; Rules 7b bans hand-labelling of test. Pseudo-labelling / test-similarity weighting not named → grey area (learning from future unlabelled rows).
 Launched Kaggle CPU sharechat-pseudo-valid (pseudo.py): holdout day = unlabelled "test". S0 train only · P1 + holdout soft labels w1 · P2 w0.3 · P3 confident hard labels (top 1.5% / bottom 50%) · P4 two rounds. Also AUC at S0's iteration count.
 Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain survives inside Blend v3; then ask host before any submission. Otherwise close.
+  Networks lose least (0.0059 vs 0.0063–0.0069) → small hint that more network weight may transfer slightly better; NN-heavier blend was −0.00006 on holdout (16 Nov).
