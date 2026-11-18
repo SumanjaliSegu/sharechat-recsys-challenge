@@ -255,3 +255,4 @@ Rules check (read 18 Nov): Overview "Important Note" = serving-time info only, e
 Launched Kaggle CPU sharechat-pseudo-valid (pseudo.py): holdout day = unlabelled "test". S0 train only · P1 + holdout soft labels w1 · P2 w0.3 · P3 confident hard labels (top 1.5% / bottom 50%) · P4 two rounds. Also AUC at S0's iteration count.
 Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain survives inside Blend v3; then ask host before any submission. Otherwise close.
   Networks lose least (0.0059 vs 0.0063–0.0069) → small hint that more network weight may transfer slightly better; NN-heavier blend was −0.00006 on holdout (16 Nov).
+- v5nn (v3 files, NN weight 0.25): holdout 0.84109/0.83997 → **public 0.83461** (v3 0.83462). Network weighting closed.
