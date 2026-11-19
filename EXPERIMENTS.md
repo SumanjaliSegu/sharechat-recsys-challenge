@@ -287,3 +287,5 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - **Views RESULT**: nohist 0.83952 · noemb 0.83353 · norate 0.83973 (full G ≈ 0.83995). Rank correlation with the LGB component 0.981–0.997 → even with whole blocks removed the models rank rows almost identically.
   In Blend v3 at 5–25%: best 0.84113/0.84003 → no gain. Not adopted.
   Finding: ShareChat's history-rate columns (409–431, 480–515) are almost fully redundant (−0.0004 when removed); embedding match features carry −0.0064.
+- 19 Nov research — RecSys Challenge 2023 (ShareChat, 9th place, Kim & Lee arXiv 2310.03778): gains came from frequency encoding (we tried train-period counts/rates in te.py: no gain) and "denoising" scaled-integer columns (arithmetic-sequence values ÷ step).
+  Our data checked (row group 3, 484 numeric columns): no injected-noise pattern — the only regular grids are float32 precision steps (2^-8 … 6e-8); "near-integer" flags were small rates (0–0.05). Denoising is also monotone, so trees would not benefit. Closed.
