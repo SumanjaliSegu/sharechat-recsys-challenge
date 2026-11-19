@@ -121,6 +121,8 @@ def featurize(df, vocab):
         out = pl.concat([out, df.select(temod.te_names())], how="horizontal")
     if KNN:
         out = pl.concat([out, df.select(knnmod.NAMES)], how="horizontal")
+    if NNF:
+        out = pl.concat([out, df.select(pl.col("h_nn").cast(pl.Float32))], how="horizontal")
     return out
 
 
@@ -185,6 +187,9 @@ def read_rg(g):
         df = df.with_row_index("rn", offset=off).join(XTAB, on="rn", how="left", maintain_order="left").drop("rn")
     if TE:
         df = df.with_row_index("rn", offset=off).join(TETAB, on="rn", how="left", maintain_order="left").drop("rn")
+    if NNF:
+        df = df.with_row_index("rn", offset=off).with_columns(pl.col("rn").cast(pl.UInt32)) \
+               .join(NNTAB, on="rn", how="left", maintain_order="left").drop("rn")
     return df
 
 
@@ -396,6 +401,11 @@ if OPTP:
     TAG += "_opt" if "optuna" in OPTP else "_" + _os.path.splitext(_os.path.basename(OPTP))[0]
 
 ITERS = next((int(a.split("=")[1]) for a in sys.argv if a.startswith("--iters=")), None)
+# Hybrid: out-of-fold towers-network score as one extra input (nn_oof.py). Row-independent.
+NNF = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--nnf=")), None)
+NNTAB = None
+if NNF:
+    TAG += "_nnf"
 
 if __name__ == "__main__":
     import os
@@ -409,6 +419,10 @@ if __name__ == "__main__":
     if KNN:
         KNTAB, KNMAP = build_knn(STAGE)
         log(f"knn table {KNTAB.shape}")
+    if NNF:
+        NNTAB = pl.read_parquet(f"{NNF}/nnf_{STAGE}.parquet")
+        assert NNTAB.height == pf_tr.metadata.num_rows and NNTAB["h_nn"].null_count() == 0
+        log(f"nnf table {NNTAB.shape}")
     if STAGE == "valid":
         if XROW:
             XTAB = build_xrow()
@@ -479,6 +493,9 @@ if __name__ == "__main__":
                 if "feature18" not in df.columns:
                     df = df.with_columns(pl.from_arrow(pf_te.read_row_group(g, columns=["feature18"]))["feature18"])
                 df = df.join(KNMAP, on="feature18", how="left", maintain_order="left")
+            if NNF:
+                df = df.join(pl.read_parquet(f"{NNF}/nnf_test.parquet"), on="id", how="left", maintain_order="left")
+                assert df["h_nn"].null_count() == 0
             ids.append(df["id"].to_numpy())
             preds.append(model.predict(to_np(featurize(df, vocab))[0]))
             log(f"  test rg {g} predicted")

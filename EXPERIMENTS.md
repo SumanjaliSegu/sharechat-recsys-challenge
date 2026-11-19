@@ -265,3 +265,5 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - 19 Nov: slow linear-tree seed 7 = **0.84065** (best iter 979; best single LightGBM so far — seed 42's 183-iter stop was an early-stopping accident).
   Blend v3 + s7 group 0.84115/0.84004 · + s7 & lr0.03 linear as two groups 0.84117/0.84007 (+0.00005) → below +0.0002 rule; not submitted.
 - Official rank 19 Nov: 34/59 (new team at 0.83482), public 0.83462.
+- 19 Nov: **Hybrid launched** (Kaggle GPU sharechat-hybrid): nn_oof.py = towers network, 5 random folds, 4 epochs → out-of-fold score per train row (holdout/test = mean of 5 fold nets); then train_lgb.py --nnf (G lr0.03 ist + h_nn) valid + full.
+  Row alignment of the join checked locally (rn offsets exact); smoke run OK. Baseline G lr0.03 ist ≈ 0.83995. Rule: as a LightGBM group in v3 must give ≥ +0.0002 on both plain and test-mix.
