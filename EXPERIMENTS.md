@@ -267,3 +267,5 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - Official rank 19 Nov: 34/59 (new team at 0.83482), public 0.83462.
 - 19 Nov: **Hybrid launched** (Kaggle GPU sharechat-hybrid): nn_oof.py = towers network, 5 random folds, 4 epochs → out-of-fold score per train row (holdout/test = mean of 5 fold nets); then train_lgb.py --nnf (G lr0.03 ist + h_nn) valid + full.
   Row alignment of the join checked locally (rn offsets exact); smoke run OK. Baseline G lr0.03 ist ≈ 0.83995. Rule: as a LightGBM group in v3 must give ≥ +0.0002 on both plain and test-mix.
+- **Hybrid RESULT**: network OOF AUC 0.8320 (train folds), 0.8350 on holdout (5-fold mean). LightGBM + h_nn: **0.83976** (G lr0.03 ist without it ≈ 0.83995) — h_nn became the #1 feature by gain but replaced information instead of adding it.
+  In Blend v3: 0.84113/0.84002 (+0.00001) → no gain, not submitted. Hybrid closed.
