@@ -273,3 +273,5 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   1. Raw embedding coordinates as LightGBM inputs (train_lgb.py --embval=post: 7×32 post vectors = video content; --embval=all: + 7×32 user vectors). Kaggle CPU sharechat-embval-post / -all, G lr0.03 ist, valid + full. Baseline ≈ 0.83995.
   2. CatBoost native embedding_features (catboost_emb.py; CPU, lr 0.08, depth 8, all negatives; 14 vectors as embedding features → CatBoost's own LDA / nearest-class features). Kaggle CPU sharechat-catboost-emb. Existing CatBoost component 0.8396.
   Rule unchanged: inside Blend v3 ≥ +0.0002 on plain and test-mix.
+- **Raw-embedding LightGBM RESULT**: --embval=post 0.83969, --embval=all 0.83974 (base ≈ 0.83995) → no gain alone; in Blend v3 0.84111/0.84001 and 0.84113/0.84002 → not adopted. Trees already get the useful part via dots/cosines.
+- Official rank 19 Nov evening: 36/63 (new teams at 0.83558 and 0.83480), public 0.83462. CatBoost-emb still running.
