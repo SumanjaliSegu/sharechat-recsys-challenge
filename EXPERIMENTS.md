@@ -301,3 +301,6 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - 20 Nov 23:20 — PLR-c (sigma 0.3, 10-epoch schedule, seeds 2–5): 0.83845/0.83840/0.83742/0.83792 (best ep 3–5); PLR-d (sigma 0.1): 0.83779/0.83719.
   Blend: c alone as networks 0.84108/0.83998 ✗ · b+c (6 seeds) w0.25 0.84114/0.84004, old nets+PLR mix 0.84118/0.84008 · b+c+d ≈ v3.
   → PLR-b's +0.00011 was largely seed luck; robust gain ≈ +0.00002–0.00006. Testing whether the 6-epoch schedule matters: plr-f (sigma 0.3, 6 ep, seeds 2–5), plr-g (sigma 0.5, 6 ep, seeds 0–1).
+- 21 Nov 00:00 — PLR-f (sigma 0.3, 6 epochs, seeds 2–5): 0.83839/0.83840/0.83848/0.83828; 4-seed avg 0.83908; blend w0.25 0.84120/0.84011 → **6-epoch schedule reproduces the gain** (10-epoch run c did not). PLR-g sigma 0.5 worse.
+  **Fixed Blend v5 frozen** (final/fixed_blend_v5): v3 trees (rescaled) + 6 PLR nets (b+f) as networks, weight 0.25 → holdout **0.84122 / 0.84013** (v3 0.84112/0.84002). +0.0001 consistent across seed sets; below +0.0002 rule → public check at 05:40, not auto-final.
+  Launched plr-h (k 24, d 16), plr-i (sigma 0.2).

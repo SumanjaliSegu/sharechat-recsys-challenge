@@ -211,7 +211,8 @@ class TowersPLR(nn.Module):
 
     def __init__(self, n_user, n_post, n_pair, ucards, pcards, drop=0.3, H=192):
         super().__init__()
-        self.eu, self.ep, self.er = (PLR(n, sigma=self.SIGMA) for n in (n_user, n_post, n_pair))
+        K, D = int(os.environ.get("PLR_K", "16")), int(os.environ.get("PLR_D", "8"))
+        self.eu, self.ep, self.er = (PLR(n, k=K, d=D, sigma=self.SIGMA) for n in (n_user, n_post, n_pair))
         self.net = Towers(self.eu.out_dim, self.ep.out_dim, self.er.out_dim, ucards, pcards, drop, H)
 
     def forward(self, xu, xp, xr, cu, cp, U, P):
