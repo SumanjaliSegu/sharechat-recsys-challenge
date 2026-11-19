@@ -278,3 +278,6 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - 19 Nov night — **new angle: tune what the holdout cannot measure, on the public LB.** Holdout = 0–1 day after training; test = 0–3 days (incl. Fri/Sat). Full-fit round count (always 1.15× holdout best) and recency weighting were never judged on test-day data.
   Kaggle CPU sharechat-lbtune: G lr0.03 ist valid once, then 5 full fits: V0 1.15× rounds (reference) · V1 0.80× · V2 1.60× · V3 recency half-life 1 d · V4 half-life 0.5 d. Submit all 5 as diagnostics (single LGB).
   Rule: a variant counts only if ≥ +0.0003 public over V0 (public precision ~0.00001 between near-identical models); then apply the same setting to the blend's LightGBM/XGBoost full fits.
+- **lbtune RESULT (public, single LGB G lr0.03 ist, holdout 0.83995, best iter 366)**: V0 1.15× rounds **0.83346** · V1 0.80× 0.83331 (−0.00015) · V2 1.60× 0.83348 (+0.00002) · V3 recency 1 d 0.83319 (−0.00027) · V4 recency 0.5 d 0.83249 (−0.00097).
+  → Round count is on a plateau (our 1.15× is right); recency weighting HURTS on test days, more strongly than on holdout → test rewards long history, not recent behaviour. No setting passes +0.0003. Closed.
+- Laptop watcher killed again for low memory (not restarted).
