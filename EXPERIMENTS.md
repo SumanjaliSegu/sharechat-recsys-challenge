@@ -292,3 +292,7 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - 19 Nov night — research sweep (TabArena NeurIPS 2025, CTR benchmarks, RecSys 2023). Only strong untried item for us: PLR periodic numeric embeddings (Gorishniy et al. NeurIPS 2022; used inside TabM/RealMLP top configs).
   nn2_multi.py arch "plr" = TowersPLR (per-feature sin/cos frequencies k=16 → linear d=8 → ReLU, before the towers). Smoke (15k rows) 0.728 vs towers 0.812 — slow start on tiny data, as GTF did.
   Kaggle GPU sharechat-plr-a (sigma 1.0) and -plr-b (sigma 0.3), seeds 0,1. Networks component = 0.83702; judged by blend gain (≥ +0.0002 both).
+- **PLR RESULT** (2 seeds each): sigma 1.0 0.83652/0.83678 (best ep 3) · **sigma 0.3 0.83869/0.83810 (best ep 6 = last, still rising)**; 2-seed rank-avg 0.83887 = best network ever (towers ×6 component 0.83702). Spearman vs networks 0.981, vs LGB 0.985.
+  Blend v3 with PLR-b replacing the networks component: w0.15 0.84119/0.84009 (+0.00007) · w0.20 0.84122/0.84012 · w0.25 0.84123/0.84013 (+0.00011) · w0.30 0.84121/0.84012. PLR-a (sigma 1) hurts.
+- CatBoost-emb: stopped at Kaggle's 12 h limit during the full fit; valid 0.83836 (best iter 497); as a CatBoost group 0.84108/0.83996 ✗. Closed.
+- Launched (GPU, max 2 at a time): sharechat-plr-c (sigma 0.3, 10 epochs, seeds 2–5), sharechat-plr-d (sigma 0.1, 10 epochs, seeds 0–1).
