@@ -289,3 +289,6 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   Finding: ShareChat's history-rate columns (409–431, 480–515) are almost fully redundant (−0.0004 when removed); embedding match features carry −0.0064.
 - 19 Nov research — RecSys Challenge 2023 (ShareChat, 9th place, Kim & Lee arXiv 2310.03778): gains came from frequency encoding (we tried train-period counts/rates in te.py: no gain) and "denoising" scaled-integer columns (arithmetic-sequence values ÷ step).
   Our data checked (row group 3, 484 numeric columns): no injected-noise pattern — the only regular grids are float32 precision steps (2^-8 … 6e-8); "near-integer" flags were small rates (0–0.05). Denoising is also monotone, so trees would not benefit. Closed.
+- 19 Nov night — research sweep (TabArena NeurIPS 2025, CTR benchmarks, RecSys 2023). Only strong untried item for us: PLR periodic numeric embeddings (Gorishniy et al. NeurIPS 2022; used inside TabM/RealMLP top configs).
+  nn2_multi.py arch "plr" = TowersPLR (per-feature sin/cos frequencies k=16 → linear d=8 → ReLU, before the towers). Smoke (15k rows) 0.728 vs towers 0.812 — slow start on tiny data, as GTF did.
+  Kaggle GPU sharechat-plr-a (sigma 1.0) and -plr-b (sigma 0.3), seeds 0,1. Networks component = 0.83702; judged by blend gain (≥ +0.0002 both).

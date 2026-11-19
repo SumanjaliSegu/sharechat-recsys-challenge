@@ -188,6 +188,36 @@ class Towers(nn.Module):
         return self.head(x).squeeze(1)
 
 
+class PLR(nn.Module):
+    """Periodic numeric embeddings (Gorishniy et al., NeurIPS 2022): each scalar feature x ->
+    ReLU(Linear_j([sin(2*pi*c_j*x), cos(2*pi*c_j*x)])), separate trainable frequencies c_j and
+    linear map per feature j. Input: rank-transformed numerics in [-1, 1]."""
+    def __init__(self, n, k=16, d=8, sigma=1.0):
+        super().__init__()
+        self.c = nn.Parameter(torch.randn(n, k) * sigma)
+        self.W = nn.Parameter(torch.randn(n, 2 * k, d) * (1.0 / math.sqrt(2 * k)))
+        self.b = nn.Parameter(torch.zeros(n, d))
+        self.out_dim = n * d
+
+    def forward(self, x):
+        z = 2 * math.pi * x.unsqueeze(-1) * self.c                      # (N, n, k)
+        z = torch.cat([torch.sin(z), torch.cos(z)], -1)                  # (N, n, 2k)
+        return torch.relu(torch.einsum("njk,jkd->njd", z, self.W) + self.b).flatten(1)
+
+
+class TowersPLR(nn.Module):
+    """Towers network whose user / post / pair numeric inputs first pass through PLR embeddings."""
+    SIGMA = float(os.environ.get("PLR_SIGMA", "1.0"))
+
+    def __init__(self, n_user, n_post, n_pair, ucards, pcards, drop=0.3, H=192):
+        super().__init__()
+        self.eu, self.ep, self.er = (PLR(n, sigma=self.SIGMA) for n in (n_user, n_post, n_pair))
+        self.net = Towers(self.eu.out_dim, self.ep.out_dim, self.er.out_dim, ucards, pcards, drop, H)
+
+    def forward(self, xu, xp, xr, cu, cp, U, P):
+        return self.net(self.eu(xu), self.ep(xp), self.er(xr), cu, cp, U, P)
+
+
 class BELinear(nn.Module):
     """BatchEnsemble linear layer (TabM): shared W, per-member input/output scaling r_k, s_k and bias b_k."""
     def __init__(self, d_in, d_out, k, init_r=True):
@@ -296,7 +326,7 @@ def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=
     ucards, pcards = cards
     if nopost:
         pcards = list(pcards); pcards[0] = 1
-    M = {"tabm": TabM, "gtf": GTF}.get(arch, Towers)
+    M = {"tabm": TabM, "gtf": GTF, "plr": TowersPLR}.get(arch, Towers)
     model = M(X["user"].shape[1], X["post"].shape[1], X["pair"].shape[1], ucards, pcards, drop, H).to(DEV)
     opt = torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=wd)
     steps = epochs * math.ceil(len(y) / bs)
@@ -341,7 +371,8 @@ if __name__ == "__main__":
     ARMS = {"base": dict(gamma=0.0, ls=0.0), "focal1": dict(gamma=1.0, ls=0.0), "focal2": dict(gamma=2.0, ls=0.0),
             "ls01": dict(gamma=0.0, ls=0.01),
             "tabm": dict(gamma=0.0, ls=0.0, arch="tabm", H=512, drop=0.1, lr=2e-3, wd=3e-4),
-            "gtf": dict(gamma=0.0, ls=0.0, arch="gtf", H=128, drop=0.1, lr=1e-3, wd=1e-4, bs=2048, epochs=8)}
+            "gtf": dict(gamma=0.0, ls=0.0, arch="gtf", H=128, drop=0.1, lr=1e-3, wd=1e-4, bs=2048, epochs=8),
+            "plr": dict(gamma=0.0, ls=0.0, arch="plr", lr=1e-3, wd=1e-4, drop=0.3, epochs=6)}
     CONFIGS = [{**dict(name=f"t_{arm}_s{sd}", lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=192, nopost=False, epochs=6, seed=sd,
                      arch="towers"), **ARMS[arm]}
                for arm in os.environ.get("NNARMS", "base").split(",")
