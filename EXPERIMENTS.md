@@ -296,3 +296,5 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   Blend v3 with PLR-b replacing the networks component: w0.15 0.84119/0.84009 (+0.00007) · w0.20 0.84122/0.84012 · w0.25 0.84123/0.84013 (+0.00011) · w0.30 0.84121/0.84012. PLR-a (sigma 1) hurts.
 - CatBoost-emb: stopped at Kaggle's 12 h limit during the full fit; valid 0.83836 (best iter 497); as a CatBoost group 0.84108/0.83996 ✗. Closed.
 - Launched (GPU, max 2 at a time): sharechat-plr-c (sigma 0.3, 10 epochs, seeds 2–5), sharechat-plr-d (sigma 0.1, 10 epochs, seeds 0–1).
+- Night plan 19→20 Nov: watcher on plr-c / plr-d; build_v5.py swaps PLR nets into the networks component. Builder check: PLR-b w0.15 → 0.84119, w0.25 → 0.84123 (matches eval).
+  After 05:30 IST reset: submit the best PLR blend if it beats v3 on both plain and test-mix (candidate final if ≥ +0.0002, otherwise a public check).
