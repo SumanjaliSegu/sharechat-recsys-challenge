@@ -281,3 +281,5 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - **lbtune RESULT (public, single LGB G lr0.03 ist, holdout 0.83995, best iter 366)**: V0 1.15× rounds **0.83346** · V1 0.80× 0.83331 (−0.00015) · V2 1.60× 0.83348 (+0.00002) · V3 recency 1 d 0.83319 (−0.00027) · V4 recency 0.5 d 0.83249 (−0.00097).
   → Round count is on a plateau (our 1.15× is right); recency weighting HURTS on test days, more strongly than on holdout → test rewards long history, not recent behaviour. No setting passes +0.0003. Closed.
 - Laptop watcher killed again for low memory (not restarted).
+- 19 Nov: **everything combined** (v3 + 5 new LightGBM groups: KNN, Optuna, linear-tree ×2, hybrid, raw-embedding ×2; + TabM ×3, GTF ×2 in networks): 0.84112–0.84114 / 0.84001–0.84004 vs v3 0.84112/0.84002 → combining all new models adds nothing (+0.00002 at best).
+- Team mergers are allowed (rules 3b; no separate merger deadline on the timeline; combined submission count must be ≤ 5 × days running). Our count: 23. User decided not to pursue a merge.
