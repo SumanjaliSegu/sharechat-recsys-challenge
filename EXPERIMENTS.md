@@ -262,3 +262,6 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   In Blend v3: P1 0.84111/0.84000, P4 0.84109/0.83999 vs 0.84112/0.84002 → **no gain. Pseudo-labelling closed; no host question needed.**
 - 19 Nov: slow linear-tree LGB seed 42 (lr 0.01, all negatives): **0.83715**, best iter 183 (stops early, worse than lr0.03 version 0.84027); in Blend v3 0.84103/0.83992 ✗. Seed 7 still running — irrelevant. Linear-tree line closed. Nothing submitted.
 - Laptop watcher stopped for low system memory (8 GB laptop); not restarted.
+- 19 Nov: slow linear-tree seed 7 = **0.84065** (best iter 979; best single LightGBM so far — seed 42's 183-iter stop was an early-stopping accident).
+  Blend v3 + s7 group 0.84115/0.84004 · + s7 & lr0.03 linear as two groups 0.84117/0.84007 (+0.00005) → below +0.0002 rule; not submitted.
+- Official rank 19 Nov: 34/59 (new team at 0.83482), public 0.83462.
