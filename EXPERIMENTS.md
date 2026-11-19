@@ -275,3 +275,6 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   Rule unchanged: inside Blend v3 ≥ +0.0002 on plain and test-mix.
 - **Raw-embedding LightGBM RESULT**: --embval=post 0.83969, --embval=all 0.83974 (base ≈ 0.83995) → no gain alone; in Blend v3 0.84111/0.84001 and 0.84113/0.84002 → not adopted. Trees already get the useful part via dots/cosines.
 - Official rank 19 Nov evening: 36/63 (new teams at 0.83558 and 0.83480), public 0.83462. CatBoost-emb still running.
+- 19 Nov night — **new angle: tune what the holdout cannot measure, on the public LB.** Holdout = 0–1 day after training; test = 0–3 days (incl. Fri/Sat). Full-fit round count (always 1.15× holdout best) and recency weighting were never judged on test-day data.
+  Kaggle CPU sharechat-lbtune: G lr0.03 ist valid once, then 5 full fits: V0 1.15× rounds (reference) · V1 0.80× · V2 1.60× · V3 recency half-life 1 d · V4 half-life 0.5 d. Submit all 5 as diagnostics (single LGB).
+  Rule: a variant counts only if ≥ +0.0003 public over V0 (public precision ~0.00001 between near-identical models); then apply the same setting to the blend's LightGBM/XGBoost full fits.
