@@ -47,7 +47,8 @@ P_EMB = [f"feature{i}" for i in range(40, 47)]
 NOPOST = "--nopost" in sys.argv
 LR = next((float(a.split("=")[1]) for a in sys.argv if a.startswith("--lr=")), 0.05)
 RAWEMB = "--rawemb" in sys.argv
-TAG = ("v2emb" if USE_EMB else "v1") + ("_raw" if RAWEMB else "") + ("_nopost" if NOPOST else "") + (f"_lr{LR}" if LR != 0.05 else "")
+EMBVAL = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--embval=")), None)  # post | all
+TAG = ("v2emb" if USE_EMB else "v1") + ("_raw" if RAWEMB else "") + (f"_ev{EMBVAL}" if EMBVAL else "") + ("_nopost" if NOPOST else "") + (f"_lr{LR}" if LR != 0.05 else "")
 if NOPOST:
     STR_COLS.remove("feature18")
     READ_COLS.remove("feature18")
@@ -78,6 +79,11 @@ def emb_feats(df):
             prod = U[u] * P[p]
             for i in range(32):
                 cols[f"x_{u}_{p}_{i}"] = prod[:, i]
+    if EMBVAL:  # raw embedding coordinates of this row (video content / user taste), row-local
+        for c in (P_EMB if EMBVAL == "post" else U_EMB + P_EMB):
+            v = P[c] if c in P else U[c]
+            for i in range(32):
+                cols[f"e_{c}_{i}"] = v[:, i]
     return pl.DataFrame(cols)
 
 

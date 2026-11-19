@@ -269,3 +269,7 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   Row alignment of the join checked locally (rn offsets exact); smoke run OK. Baseline G lr0.03 ist ≈ 0.83995. Rule: as a LightGBM group in v3 must give ≥ +0.0002 on both plain and test-mix.
 - **Hybrid RESULT**: network OOF AUC 0.8320 (train folds), 0.8350 on holdout (5-fold mean). LightGBM + h_nn: **0.83976** (G lr0.03 ist without it ≈ 0.83995) — h_nn became the #1 feature by gain but replaced information instead of adding it.
   In Blend v3: 0.84113/0.84002 (+0.00001) → no gain, not submitted. Hybrid closed.
+- 19 Nov evening — two new directions launched (never tried before for trees):
+  1. Raw embedding coordinates as LightGBM inputs (train_lgb.py --embval=post: 7×32 post vectors = video content; --embval=all: + 7×32 user vectors). Kaggle CPU sharechat-embval-post / -all, G lr0.03 ist, valid + full. Baseline ≈ 0.83995.
+  2. CatBoost native embedding_features (catboost_emb.py; CPU, lr 0.08, depth 8, all negatives; 14 vectors as embedding features → CatBoost's own LDA / nearest-class features). Kaggle CPU sharechat-catboost-emb. Existing CatBoost component 0.8396.
+  Rule unchanged: inside Blend v3 ≥ +0.0002 on plain and test-mix.
