@@ -284,3 +284,6 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - 19 Nov: **everything combined** (v3 + 5 new LightGBM groups: KNN, Optuna, linear-tree ×2, hybrid, raw-embedding ×2; + TabM ×3, GTF ×2 in networks): 0.84112–0.84114 / 0.84001–0.84004 vs v3 0.84112/0.84002 → combining all new models adds nothing (+0.00002 at best).
 - Team mergers are allowed (rules 3b; no separate merger deadline on the timeline; combined submission count must be ≤ 5 × days running). Our count: 23. Not pursued.
 - 19 Nov night — **diverse feature views** (blend diversity, not single-model strength): Kaggle CPU sharechat-views, LightGBM G lr0.03 ist with deliberately missing information: nohist (no 409–431, 480–515), noemb (no embedding match features), norate (no 409–431). Weaker alone by design; judged only by gain inside Blend v3 (≥ +0.0002 both).
+- **Views RESULT**: nohist 0.83952 · noemb 0.83353 · norate 0.83973 (full G ≈ 0.83995). Rank correlation with the LGB component 0.981–0.997 → even with whole blocks removed the models rank rows almost identically.
+  In Blend v3 at 5–25%: best 0.84113/0.84003 → no gain. Not adopted.
+  Finding: ShareChat's history-rate columns (409–431, 480–515) are almost fully redundant (−0.0004 when removed); embedding match features carry −0.0064.
