@@ -373,7 +373,9 @@ if __name__ == "__main__":
             "ls01": dict(gamma=0.0, ls=0.01),
             "tabm": dict(gamma=0.0, ls=0.0, arch="tabm", H=512, drop=0.1, lr=2e-3, wd=3e-4),
             "gtf": dict(gamma=0.0, ls=0.0, arch="gtf", H=128, drop=0.1, lr=1e-3, wd=1e-4, bs=2048, epochs=8),
-            "plr": dict(gamma=0.0, ls=0.0, arch="plr", lr=1e-3, wd=1e-4, drop=0.3, epochs=int(os.environ.get("PLR_EPOCHS", "6")))}
+            "plr": dict(gamma=0.0, ls=0.0, arch="plr", lr=float(os.environ.get("PLR_LR", "1e-3")), wd=1e-4,
+                        drop=float(os.environ.get("PLR_DROP", "0.3")), H=int(os.environ.get("PLR_H", "192")),
+                        epochs=int(os.environ.get("PLR_EPOCHS", "6")))}
     CONFIGS = [{**dict(name=f"t_{arm}_s{sd}", lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=192, nopost=False, epochs=6, seed=sd,
                      arch="towers"), **ARMS[arm]}
                for arm in os.environ.get("NNARMS", "base").split(",")

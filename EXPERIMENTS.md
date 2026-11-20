@@ -309,3 +309,6 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - PLR-h (k 24, d 16, sigma 0.3, 6 ep): 0.83888/0.83888; 2-seed 0.83923. Blend w0.25 **0.84130/0.84021** (+0.00018/+0.00019). PLR-i sigma 0.2: 0.83826/0.83793, weaker.
   **v6h** (v3 trees + 2 PLR-h nets, w0.25) → **public 0.83476 (new best)**; official 39/72 (tied 0.83476 with #38, passed 0.83475/0.83474).
   Launched plr-h2 (same as h, seeds 2–5: confirm not seed luck) and plr-j (k 32, d 24).
+- 20 Nov 22:00 — PLR-h2 (h settings, seeds 2–5): 0.83865/0.83891/0.83867/0.83894; PLR-j (k 32, d 24): 0.83896/0.83885. Robust 8-net set (h ×6 + j ×2) single 0.83947; blend w0.25 0.84126/0.84018.
+  **v7** (v3 trees + 8 wide PLR nets, w0.25) → **public 0.83477 (new best)**. Launched plr-j2 (j, seeds 2–5), plr-k (H 256, drop 0.35).
+- **LightGBM max_bin was never tuned** (127 everywhere, incl. Optuna). Launched Kaggle CPU sharechat-lgb-bins: G lr0.03 ist with max_bin 255 / 511 / 1023, valid + full (baseline 0.83995).
