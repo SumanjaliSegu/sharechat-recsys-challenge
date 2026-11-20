@@ -312,3 +312,6 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - 20 Nov 22:00 — PLR-h2 (h settings, seeds 2–5): 0.83865/0.83891/0.83867/0.83894; PLR-j (k 32, d 24): 0.83896/0.83885. Robust 8-net set (h ×6 + j ×2) single 0.83947; blend w0.25 0.84126/0.84018.
   **v7** (v3 trees + 8 wide PLR nets, w0.25) → **public 0.83477 (new best)**. Launched plr-j2 (j, seeds 2–5), plr-k (H 256, drop 0.35).
 - **LightGBM max_bin was never tuned** (127 everywhere, incl. Optuna). Launched Kaggle CPU sharechat-lgb-bins: G lr0.03 ist with max_bin 255 / 511 / 1023, valid + full (baseline 0.83995).
+- 20 Nov 22:40 — **shared-error analysis (user's idea)**: when one family misses a watch (watched row ranked in bottom half), all 4 miss it 55% of the time. All-family misses concentrate in long videos ≥120 s (2% of watches, 27% of misses, miss rate 65%) and high-activity users (20% / 46%, 10.9%).
+  Calibration is fine per segment (pred/actual 0.99–1.13); cross-fitted 9-segment recalibration 0.84015 vs 0.84024 → not a bias problem.
+  Launched **residual specialist** (resid.py, Kaggle CPU sharechat-resid): LightGBM with init_score = A·logit(training video watch rate, OOF) so trees learn only the user×video part (inside-video AUC 0.737 is our weakest spot). Arms A=1.0/0.5, valid + full.
