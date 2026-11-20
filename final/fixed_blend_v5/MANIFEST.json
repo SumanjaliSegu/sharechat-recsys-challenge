@@ -1,6 +1,6 @@
 {
  "name": "fixed_blend_v5",
- "public_auc": null,
+ "public_auc": 0.83471,
  "holdout_auc_plain": 0.84112,
  "holdout_auc_testmix": 0.84002,
  "blend": "v3 trees + PLR networks (weight 0.25) replacing towers",

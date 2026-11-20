@@ -305,3 +305,7 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   **Fixed Blend v5 frozen** (final/fixed_blend_v5): v3 trees (rescaled) + 6 PLR nets (b+f) as networks, weight 0.25 → holdout **0.84122 / 0.84013** (v3 0.84112/0.84002). +0.0001 consistent across seed sets; below +0.0002 rule → public check at 05:40, not auto-final.
   Launched plr-h (k 24, d 16), plr-i (sigma 0.2).
 - 20 Nov 00:02: laptop watcher and the 05:40 timer both stopped for low memory; not restarted. v5 is frozen and ready; plr-h/i still running on Kaggle.
+- 20 Nov 08:00 — **v5 public 0.83471** (v3 0.83462; holdout +0.00010 → public +0.00009). **New best.**
+- PLR-h (k 24, d 16, sigma 0.3, 6 ep): 0.83888/0.83888; 2-seed 0.83923. Blend w0.25 **0.84130/0.84021** (+0.00018/+0.00019). PLR-i sigma 0.2: 0.83826/0.83793, weaker.
+  **v6h** (v3 trees + 2 PLR-h nets, w0.25) → **public 0.83476 (new best)**; official 39/72 (tied 0.83476 with #38, passed 0.83475/0.83474).
+  Launched plr-h2 (same as h, seeds 2–5: confirm not seed luck) and plr-j (k 32, d 24).
