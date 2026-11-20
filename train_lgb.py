@@ -196,6 +196,9 @@ def read_rg(g):
     if NNF:
         df = df.with_row_index("rn", offset=off).with_columns(pl.col("rn").cast(pl.UInt32)) \
                .join(NNTAB, on="rn", how="left", maintain_order="left").drop("rn")
+    if HARDW:
+        df = df.with_row_index("rn", offset=off).with_columns(pl.col("rn").cast(pl.UInt32)) \
+               .join(HWTAB, on="rn", how="left", maintain_order="left").drop("rn")
     return df
 
 
@@ -366,11 +369,31 @@ if RECENCY:
     TAG += f"_rec{RECENCY}"
 
 
+# Hard-example weighting: rows that an out-of-fold network got badly wrong count more in training.
+# --hardw=DIR:LAM reads DIR/nnf_{stage}.parquet (rn, h_nn from nn_oof.py); weight = 1 + LAM*|y - p_oof|.
+_hw = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--hardw=")), None)
+HARDW, HW_LAM = (_hw.rsplit(":", 1)[0], float(_hw.rsplit(":", 1)[1])) if _hw else (None, 0.0)
+HWTAB = None
+if HARDW:
+    TAG += f"_hw{HW_LAM:g}"
+
+
 def rec_weights(df):
-    if not RECENCY:
-        return None
-    t = df["feature1"].dt.epoch("s").cast(pl.Float64).to_numpy()
-    return (0.5 ** ((t.max() - t) / (RECENCY * 86400.0))).astype(np.float32)
+    w = None
+    if RECENCY:
+        t = df["feature1"].dt.epoch("s").cast(pl.Float64).to_numpy()
+        w = (0.5 ** ((t.max() - t) / (RECENCY * 86400.0))).astype(np.float32)
+    if HARDW:
+        yy = df["watched"].to_numpy(); r = df["hw_p"].to_numpy().astype(np.float64)  # percentile rank of OOF score
+        e = np.where(yy == 1, 1.0 - r, r)            # watched but ranked low / skipped but ranked high
+        hw = 1.0 + HW_LAM * e
+        for c in (0, 1):                              # keep each class's total weight unchanged
+            m = yy == c
+            if m.any():
+                hw[m] /= hw[m].mean()
+        hw = hw.astype(np.float32)
+        w = hw if w is None else w * hw
+    return w
 
 
 MONO = "--mono" in sys.argv  # longer video (feature54) can never raise watch probability
@@ -425,6 +448,10 @@ if __name__ == "__main__":
     if KNN:
         KNTAB, KNMAP = build_knn(STAGE)
         log(f"knn table {KNTAB.shape}")
+    if HARDW:
+        HWTAB = pl.read_parquet(f"{HARDW}/nnf_{STAGE}.parquet").select("rn", (pl.col("h_nn").rank() / pl.len()).cast(pl.Float32).alias("hw_p"))
+        assert HWTAB.height == pf_tr.metadata.num_rows and HWTAB["hw_p"].null_count() == 0
+        log(f"hard-example weights from {HARDW}, lambda {HW_LAM}")
     if NNF:
         NNTAB = pl.read_parquet(f"{NNF}/nnf_{STAGE}.parquet")
         assert NNTAB.height == pf_tr.metadata.num_rows and NNTAB["h_nn"].null_count() == 0
