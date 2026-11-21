@@ -325,3 +325,7 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   · max_bin 255/511/1023: 0.83975/0.83977/0.83996 (127: 0.83995) → bins were not limiting. As LGB group: 0.84126 = v7. Closed.
   · PLR-j2 (k32 d24 seeds 2–5): 0.83873/0.83917/0.83901/0.83917; 12 nets single 0.83954 but blend = v7. PLR family saturated.
 - Forum read 20 Nov late: host on our thread 759936 and on 760657 (distillation): "The model which predicts on the test dataset must not use features derived from request_id/request grouping." Host 759267: if top solutions are ineligible, prizes go by private LB rank among the rest.
+- 21 Nov — **full unused-column audit** (152 of 624 columns not in the main LightGBM):
+  · 137 numeric = raw popularity counters 154–286 + epochs 57–59 + drifting rates 442/454/460/472; single-column AUC only 0.55–0.57 (replaced by per-age-hour versions in --stable).
+  · 12 text columns, time-split past-watch-rate AUC: video id f18/f24 0.7015, creator f20 0.6718, f23 0.6162 (already tested as train stats 15 Nov: redundant with 409–431/480–515; video id used by the networks), f9 0.565, f7/f12 ≈0.51, session f5 0.507 (5% seen), dates f2/f4 & constant f15 0.50, request_id 0% seen later (and banned).
+  → No unused column hides strong signal. Nothing missed in the data.
