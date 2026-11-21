@@ -332,3 +332,6 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - 21 Nov 08:00 — **user approved training-time-only distillation** (host wording 759936/760657: the model predicting test must not use request features). teacher.py: LightGBM G + request size / rows-per-user / position, 4-fold OOF by session, for valid (<cut) and full rows → teach_*.parquet. Never scores test rows.
   Student: wide PLR network (k24 d16, sigma 0.3, 6 ep) with targets alpha·y + (1−alpha)·teacher (nn2_multi.py SOFT=…), inputs = row features only. Jobs ready: student-a (alpha 0.5), student-b (alpha 0.3), seeds 0,1 — push after sharechat-teacher completes. Smoke OK.
   Rule: adopt only with ≥ +0.0002 on both plain and test-mix vs v7; v7 stays the safe final regardless.
+- 21 Nov: **PLR teacher–student distillation** (teacher.py: LGB G + request size/pos/user-rows, 4-fold OOF by feature5; student = wide PLR net, row features only, target alpha·y+(1−alpha)·teacher). Teacher OOF 0.8863 valid / 0.8875 full.
+  Students (2 seeds each): alpha 0.5 0.84003 · alpha 0.3 0.84015 (v7's 8 PLR nets 0.83947 → best networks so far). Spearman vs v7 nets 0.9967.
+  In the v7 blend: best +0.00004 plain / +0.00004 test-mix (nets weight 0.30–0.35, v7 nets + students) → below the +0.0002 bar. Launched student-c (alpha 0.1) and student-d (alpha 0.0), 4 seeds each.
