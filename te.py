@@ -64,8 +64,30 @@ def _finish(df, key, prior, scale=1.0):
     })
 
 
+# Optional: TE_TIME=1 -> training rows get PAST-ONLY stats (rows from strictly earlier hours, same key), the way a
+# test row sees only earlier data. Holdout / test rows still use the full reference set (all earlier than them).
+TE_TIME = _os.environ.get("TE_TIME") == "1"
+
+
+def past_table(ref):
+    prior = float(ref["watched"].mean())
+    hr = pl.col("feature1").dt.truncate("1h").alias("_hr")
+    ref = ref.with_columns(hr)
+    cols = [ref.select("rn")]
+    for key in TE_KEYS:
+        g = (ref.filter(pl.col(key).is_not_null()).group_by([key, "_hr"])
+                .agg(pl.len().alias("nh"), pl.col("watched").sum().alias("wh")).sort([key, "_hr"])
+                .with_columns((pl.col("nh").cum_sum().over(key) - pl.col("nh")).alias("n"),
+                              (pl.col("wh").cum_sum().over(key) - pl.col("wh")).alias("w")))
+        j = ref.select(key, "_hr").join(g.select(key, "_hr", "n", "w"), on=[key, "_hr"], how="left", maintain_order="left")
+        cols.append(_finish(j, key, prior))
+    return pl.concat(cols, how="horizontal").sort("rn"), prior
+
+
 def oof_table(ref):
     """ref: DataFrame with rn, watched, feature5 and TE_KEYS. Returns rn + te cols."""
+    if TE_TIME:
+        return past_table(ref)
     prior = float(ref["watched"].mean())
     # fold by hashed user id -> grouped folds
     fold = (ref["feature5"].hash(seed=7) % K).cast(pl.Int32)

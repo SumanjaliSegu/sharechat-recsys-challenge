@@ -337,9 +337,9 @@ if FE:
             READ_COLS.append(_c)
 TE = "--te" in sys.argv
 if TE:
-    TAG += "_te"
     sys.path.insert(0, "D:/sharechat")
     import te as temod
+    TAG += "_te" + ("time" if temod.TE_TIME else "")
 TOPK = next((int(a.split("=")[1]) for a in sys.argv if a.startswith("--topk=")), 0)
 MSEED = next((int(a.split("=")[1]) for a in sys.argv if a.startswith("--seed=")), SEED)
 PARAMS["seed"] = MSEED
