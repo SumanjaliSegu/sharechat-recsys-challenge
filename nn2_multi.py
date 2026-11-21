@@ -13,6 +13,7 @@ SMOKE=1 runs a tiny CPU test.
 """
 import os, glob, json, time, math, csv
 import numpy as np
+import polars as pl
 import pyarrow as pa
 import pyarrow.parquet as pq
 import pyarrow.compute as pc
@@ -395,6 +396,16 @@ if __name__ == "__main__":
     Xtr, Xho = prep.transform(btr), prep.transform(bho)
     ytr, yho = btr["y"], bho["y"]; del btr, bho
     log(f"valid: train {len(ytr):,} holdout {len(yho):,}")
+    SOFT = os.environ.get("SOFT")          # training-time-only distillation targets (teacher.py); test inputs unchanged
+    SOFT_A = float(os.environ.get("SOFT_ALPHA", "0.5"))
+    def soften(y, rows, stage):
+        tt = pl.read_parquet(f"{SOFT}/teach_{stage}.parquet")
+        full = np.full(int(tt["rn"].max()) + 1, np.nan, np.float32); full[tt["rn"].to_numpy()] = tt["t"].to_numpy()
+        t = full[rows]; assert not np.isnan(t).any(), "teacher missing rows"
+        log(f"soft targets ({stage}): alpha {SOFT_A}, teacher mean {t.mean():.4f}")
+        return (SOFT_A * y + (1 - SOFT_A) * t).astype(np.float32)
+    if SOFT:
+        ytr = soften(ytr.astype(np.float32), rn[is_tr], "valid")
     np.save(f"{OUT}/nn_holdout_rn.npy", rn[~is_tr])
     results = {}
     for cfg in CONFIGS:
@@ -416,6 +427,8 @@ if __name__ == "__main__":
 
     t = read(TRAIN, 20000 if SMOKE else None); b = prepare(t); del t
     prep = Prep().fit(b); X = prep.transform(b); y = b["y"]; del b
+    if SOFT:
+        y = soften(y.astype(np.float32), np.arange(len(y)), "full")
     tt = read(TEST, 5000 if SMOKE else None); ids = tt["id"].to_numpy(); bt = prepare(tt); del tt
     Xt = prep.transform(bt); del bt
     for cfg in CONFIGS:

@@ -329,3 +329,6 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   · 137 numeric = raw popularity counters 154–286 + epochs 57–59 + drifting rates 442/454/460/472; single-column AUC only 0.55–0.57 (replaced by per-age-hour versions in --stable).
   · 12 text columns, time-split past-watch-rate AUC: video id f18/f24 0.7015, creator f20 0.6718, f23 0.6162 (already tested as train stats 15 Nov: redundant with 409–431/480–515; video id used by the networks), f9 0.565, f7/f12 ≈0.51, session f5 0.507 (5% seen), dates f2/f4 & constant f15 0.50, request_id 0% seen later (and banned).
   → No unused column hides strong signal. Nothing missed in the data.
+- 21 Nov 08:00 — **user approved training-time-only distillation** (host wording 759936/760657: the model predicting test must not use request features). teacher.py: LightGBM G + request size / rows-per-user / position, 4-fold OOF by session, for valid (<cut) and full rows → teach_*.parquet. Never scores test rows.
+  Student: wide PLR network (k24 d16, sigma 0.3, 6 ep) with targets alpha·y + (1−alpha)·teacher (nn2_multi.py SOFT=…), inputs = row features only. Jobs ready: student-a (alpha 0.5), student-b (alpha 0.3), seeds 0,1 — push after sharechat-teacher completes. Smoke OK.
+  Rule: adopt only with ≥ +0.0002 on both plain and test-mix vs v7; v7 stays the safe final regardless.
