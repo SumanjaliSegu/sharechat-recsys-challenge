@@ -351,3 +351,8 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   · **Blend space**: rank vs logit vs probability averaging (± z-scored families) on v9w40 holdout: all 0.84129–0.84131 / 0.84021–0.84024 → rank kept.
   · **Missing-value counts**: 274/624 columns have nulls, 94% of rows ≥1 null, row null-count AUC 0.4545 alone. train_lgb.py --nullcnt adds nnull_all / nnull_u / nnull_p (row-local). Kaggle CPU sharechat-nullcnt (G lr0.03 ist; base 0.83995).
   · Still untried on purpose: TabR/ModernNCA row retrieval (user-cluster rates, its coarse version, gave 0; costly); video co-occurrence graph from training sessions (built from session/request grouping → against the host's request rule); team merge (user declined).
+
+### 21 Nov: missing-value count features (`--nullcnt`), result
+- LGB G lr0.03 + nnull_all / nnull_u / nnull_p: holdout 0.83978 (base 0.83995, -0.00017). Gain: nnull_all 109, nnull_p 80, nnull_u 0 (tiny).
+- In v9w40: as an extra LGB group plain 0.84130 / test-mix 0.84022 (base 0.84130 / 0.84023); as a 5-10% extra: no gain. **Rejected.**
+- sharechat-pair crashed (`Unknown key: group_ptr` in new XGBoost); fixed with `set_group(sizes)`, re-pushed as version 2.

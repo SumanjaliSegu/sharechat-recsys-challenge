@@ -23,7 +23,7 @@ ROUNDS = int(__import__("os").environ.get("XROUNDS", "4000"))
 def ranked(X, y, seed):
     """Random row order + consecutive blocks of GROUP rows as query ids (sorted, as XGBoost requires)."""
     p = np.random.default_rng(seed).permutation(len(y))
-    d = xgb.DMatrix(X.iloc[p], y[p]); d.set_uint_info("group_ptr", np.r_[np.arange(0, len(y), GROUP), len(y)].astype(np.uint32))
+    d = xgb.DMatrix(X.iloc[p], y[p]); d.set_group(np.diff(np.r_[np.arange(0, len(y), GROUP), len(y)]))  # group sizes
     return d
 
 
