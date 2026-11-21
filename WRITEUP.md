@@ -2,9 +2,9 @@
 
 **Task.** Predict P(watched) for a user–video-post pair. Metric: one global ROC-AUC over all rows.
 **Constraint.** Each row must be predicted from that row's features alone (serving-time rule).
-**Primary submission (Fixed Blend v3).** Public AUC 0.83462; holdout AUC 0.84112 (test-mix weighted 0.84002).
-**Backup (Fixed Blend v2b).** Public AUC 0.83460; holdout AUC 0.84111.
-Every submitted blend ranked in the same order on validation and on the public board.
+**Primary submission (Fixed Blend v9w40).** Public AUC 0.83481; holdout AUC 0.84130 (test-mix weighted 0.84023).
+**Backup (Fixed Blend v7).** Public AUC 0.83477; holdout AUC 0.84126 (test-mix 0.84018).
+Earlier frozen blends: v1 0.83447 · v2b 0.83460 · v3 0.83462 · v5 0.83471 · v6h 0.83476 · v8 0.83470 · v9 0.83479.
 
 ---
 
@@ -47,13 +47,18 @@ Every submitted blend ranked in the same order on validation and on the public b
 | LightGBM "G" (lr 0.03, 5 seeds) | 0.8398 | negatives downsampled to 25% (AUC-invariant) |
 | XGBoost (GPU, seeds 1/2/3) | 0.8400 / 0.8403 / 0.8400 | depth 8, lr 0.03, colsample 0.5, min_child_weight 50 |
 | CatBoost ×3 (GPU) | 0.8387 / 0.8388 / seed 7 | depth 8 and 10 |
-| **Structured multi-tower network (our design)** | 0.8347–0.8352 per seed (×6 seeds in the blend) | user / post / pair towers on quantile-ranked inputs, 49 cosine matches + 7 learned bilinear user–post matches, DCN-v2 cross layers; BCE loss, AdamW, OneCycle, AMP |
-| DCN-v2 network | 0.8337 | 1,081 dense inputs + categorical embeddings |
+| Structured multi-tower network (our design, used up to v3) | 0.8347–0.8352 per seed | user / post / pair towers on quantile-ranked inputs, 49 cosine matches + 7 learned bilinear user–post matches, DCN-v2 cross layers; BCE loss, AdamW, OneCycle, AMP |
+| **PLR towers network (final networks)** | 0.8390–0.8395 per seed (8 runs: k24/d16 seeds 0–5, k32/d24 seeds 0–1) | the towers network above with **periodic numeric embeddings (PLR)** in front: each numeric input x → [sin 2πcx, cos 2πcx] with k trainable frequencies c (init N(0, σ=0.3)), then a per-feature linear layer (d outputs) + ReLU. 6-epoch OneCycle, lr 1e-3, dropout 0.3, hidden 192. Biggest network gain of the competition (0.8370 → 0.8395) |
+| **Distilled PLR students (teacher–student, §7)** | 0.8400 / 0.8402 / 0.8401 (α 0.5 / 0.3 / 0.1) | same PLR network and row-only inputs, trained on α·label + (1−α)·teacher out-of-fold probability; best single networks we built |
 
 ## 5. Ensemble
-Rank average with **fixed** weights: 0.40 LightGBM + 0.30 XGBoost + 0.15 CatBoost + 0.15 networks.
+Rank average with **fixed** weights: **0.282 LightGBM + 0.212 XGBoost + 0.106 CatBoost + 0.40 networks**
+(= the v3 tree weights 0.40 / 0.30 / 0.15, rescaled to make room for the networks).
 Inside a family, files are rank-averaged within a group (e.g. seeds of one configuration) and groups are averaged
-equally (LightGBM groups: slow lr 0.01 ×3 seeds, G lr 0.03 ×5 seeds, DART, 127-leaf).
+equally (LightGBM groups: slow lr 0.01 ×3 seeds, G lr 0.03 ×5 seeds, DART, 127-leaf; network groups: 8 PLR runs,
+8 distilled PLR students).
+Network weight was the one setting chosen with the public board: holdout is flat between 0.30 and 0.40
+(0.84130 both) and drops beyond; public 0.30 → 0.83479, **0.40 → 0.83481**, 0.50 → 0.83478.
 A 9-model stack with weights *learned* on the holdout scored higher on holdout (0.8410) but lower on the public
 board (0.83436) — the learned weights fit holdout noise — so fixed weights were kept.
 
@@ -70,7 +75,14 @@ linear-leaf LightGBM (best single LightGBM, 0.8403, but +0.00004 in the blend) �
 feature-group Transformer (0.8314) · extra seeds (+0.00001; seed averaging saturated) ·
 network-heavier blend weights (public 0.83461 vs 0.83462) ·
 pseudo-labelling, validation only (holdout day used as unlabelled data; +0.0002 alone, which disappears at
-equal boosting rounds, 0 in the blend — never used on test).
+equal boosting rounds, 0 in the blend — never used on test) ·
+max_bin 255/511/1023 · residual specialist (trees on top of the video's training watch rate) ·
+hard-example re-weighting · extra tree models in the PLR blend (v8: holdout +0.00005, public −0.00007) ·
+raw embedding coordinates as tree inputs · CatBoost with embedding features ·
+**user-taste clusters** (KMeans on each row's own user embeddings, k 32/128/512, × creator / category /
+video-cluster watch rates from training labels: used by the trees but 0.83993 vs 0.83995, 0 in the blend) ·
+**pairwise AUC loss** for the PLR network (BCE + 0.5 × in-batch watched-vs-skipped softplus; 0.8394, +0.00001
+in the blend) · user embeddings as a persistent-user key (they change per session: 0.6% of test rows seen).
 **Drop from validation to public is uniform:** each family submitted alone loses 0.0059–0.0069
 (LightGBM 0.84069→0.83435, XGBoost 0.84060→0.83411, CatBoost 0.83964→0.83278, networks 0.83702→0.83116),
 and validation AUC shows no decay across the 24 h holdout → no family is under-weighted for the later test days.
@@ -87,11 +99,19 @@ To understand the ~0.888 public scores we ran **diagnostics that were never subm
   0.840 to **0.8875**;
 - a model predicting request size / position **from row features alone** reaches R² 0.32 / 0.15; the
   row-predicted size carries AUC 0.638 versus 0.759 for the true size.
-- teacher–student check (validation only): a teacher that sees request features scores 0.886 out-of-fold, but
-  a row-only student trained on its soft labels gains only +0.0004 alone and 0 in the blend.
 **Conclusion:** the part of request structure visible in a row is already used by our model; the remaining
-signal exists only across rows, which the competition prohibits. We therefore kept a strictly row-independent
-solution, matching ShareChat's serving-time requirement.
+signal exists only across rows, which the competition prohibits. Every model that scores test rows is strictly
+row-independent, matching ShareChat's serving-time requirement.
+
+**Training-time-only distillation (used in the final blend).** The host clarified on the forum (threads 759936,
+760657) that *"the model which predicts on the test dataset must not use features derived from request_id/request
+grouping"*. We use request features only as a training signal:
+- **Teacher** (`teacher.py`): LightGBM on the G features + request size, position in request and rows per user,
+  trained on training rows only, 4-fold out-of-fold grouped by session (a row's target never comes from a model
+  that saw that row). OOF AUC 0.886 (validation stage) / 0.888 (all training rows). **It never scores a test row.**
+- **Students** (`nn2_multi.py` with `SOFT`): the PLR network on row-only inputs, trained on
+  α·label + (1−α)·teacher probability (α 0.5 / 0.3 / 0.1). At test time they receive exactly the same inputs as
+  every other model. Gain: +0.0007 single-network AUC; +0.00002 public in the blend (v9 vs v7).
 
 ## 8. Limitations and next steps
 - New / young posts remain hardest (AUC 0.825 vs 0.842 for posts seen in training).
@@ -100,9 +120,11 @@ solution, matching ShareChat's serving-time requirement.
   modelling would be the largest available gain.
 
 ## 9. Reproduce
-See `README.md`. `final/fixed_blend_v3/MANIFEST.json` records every component (script, flags, Kaggle notebook,
-checksums); `python ensemble.py final/fixed_blend_v3 --holdout` rebuilds the exact submitted file and reports
-holdout AUC 0.84112.
+See `README.md`. `final/fixed_blend_v9w40/MANIFEST.json` records every component (files, groups, weights,
+checksums); `python ensemble.py final/fixed_blend_v9w40 --holdout` rebuilds the exact submitted file and reports
+holdout AUC 0.84130. `python run_all.py` retrains every component (stages lgb, xgb, catboost, nets, teacher,
+students) and rebuilds the blend; `python run_all.py --only blend` on the original outputs reproduces the
+submitted v9w40 file exactly (max difference 0.0 over 1,037,090 rows, 21 Nov).
 
 **End-to-end reproduction from code (`run_all.py`, fresh Kaggle notebooks, 16–17 Nov):**
 - LightGBM (`--only lgb`, CPU): all 6 test predictions bit-identical to the frozen files (max diff 0.0).
@@ -112,4 +134,5 @@ holdout AUC 0.84112.
 
 **Compute.** Training on Kaggle Notebooks: CPU notebooks for LightGBM; GPU notebooks (CUDA; card as assigned by Kaggle) for XGBoost,
 CatBoost and networks. Blending runs on a laptop (8 GB RAM). Python 3.12; versions in `requirements.txt`.
-Seeds: LightGBM 42/7/99 (slow), 42/7/99/123/2026 (G); XGBoost 1/2/3; CatBoost 42/7; networks 0–5.
+Seeds: LightGBM 42/7/99 (slow), 42/7/99/123/2026 (G); XGBoost 1/2/3; CatBoost 42/7; PLR networks 0–5 (k24) and
+0–1 (k32); students 0–1 (α 0.5, 0.3), 0–3 (α 0.1); teacher LightGBM seed 42.

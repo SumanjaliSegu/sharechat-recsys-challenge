@@ -16,3 +16,4 @@ kaggle_*/run.py
 final/*/test_preds/
 final/*/holdout_preds/
 eda_out.txt
+final/reproduced/
