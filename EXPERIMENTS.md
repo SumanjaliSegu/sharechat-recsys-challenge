@@ -339,3 +339,7 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   **v9** = v7 + students a/b/c as networks group 1 (nets weight 0.30), final/fixed_blend_v9: holdout 0.84130, public **0.83479** (v7 0.83477, +0.00002) → new best by a hair, rank 45/82.
   Network-weight probe on public (v9 files): 0.30 0.83479 · **0.40 0.83481 (best, final/fixed_blend_v9w40)** · 0.50 0.83478. Holdout 0.84130/0.84130/0.84125 → public peak = holdout plateau edge.
   student-d alpha 0.0 (pure teacher, 4 seeds) 0.83985 single, adds 0 to the blend → alpha 0.3 was the best; distillation line closed at v9w40.
+- 21 Nov evening — two NEW ideas from an outside review (the rest of the review was already done or uses other rows):
+  · **User-taste clusters** (ucl_build.py + te.py UCL): KMeans on each row's own user embeddings (PCA 32; k 32/128/512) and video embeddings (k 256), fitted on pre-cut training rows; OOF training-label rates for cluster × creator / category / video-cluster / video. Kaggle CPU sharechat-ucl (G lr0.03 ist + --te with cluster keys; baseline 0.83995).
+  · **Pairwise-ranking XGBoost** (xgb_pair.py): rank:pairwise, random 1000-row query blocks (not sessions), global holdout AUC per 250 rounds. Kaggle GPU sharechat-pair.
+  User embeddings checked as a persistent user key: 435k vectors for 421k sessions, 0.6% of test rows seen → per-session, no user id.
