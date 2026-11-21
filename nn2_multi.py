@@ -320,6 +320,9 @@ def predict(model, X, bs=16384):
     return np.concatenate(out)
 
 
+PAIR_LAM = float(os.environ.get("PAIR_LAM", "0"))  # weight of the pairwise ranking term (0 = plain BCE)
+
+
 def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=192, seed=0, nopost=False,
           gamma=0.0, ls=0.0, arch="towers"):
     if SMOKE:
@@ -340,7 +343,14 @@ def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=
         if gamma:
             p = torch.sigmoid(z); pt = p * t + (1 - p) * (1 - t)
             ce = (1 - pt).clamp_min(0).pow(gamma) * ce
-        return ce.mean()
+        loss = ce.mean()
+        if PAIR_LAM:  # + pairwise AUC surrogate: every watched vs every skipped row of this RANDOM batch (no sessions)
+            zz2, tt2 = (z, t) if z.dim() == 2 else (z[:, None], t[:, None])
+            pos = tt2[:, 0] > 0.5
+            if pos.any() and (~pos).any():
+                d = zz2[pos][:, None, :] - zz2[~pos][None, :, :]          # (n_pos, n_neg, members)
+                loss = loss + PAIR_LAM * nn.functional.softplus(-d).mean()
+        return loss
     amp = DEV == "cuda"
     scaler = torch.amp.GradScaler("cuda", enabled=amp)
     hist = []
