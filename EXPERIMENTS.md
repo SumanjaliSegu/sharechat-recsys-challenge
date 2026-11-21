@@ -338,3 +338,4 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   student-c alpha 0.1 (4 seeds) 0.84011 (spearman v7 nets 0.9933) → not better than alpha 0.3. Best combo v7 nets + all students, weight 0.3–0.4: 0.84130 / 0.84022 (+0.00004) → still below the bar. student-d (alpha 0) running.
   **v9** = v7 + students a/b/c as networks group 1 (nets weight 0.30), final/fixed_blend_v9: holdout 0.84130, public **0.83479** (v7 0.83477, +0.00002) → new best by a hair, rank 45/82.
   Network-weight probe on public (v9 files): 0.30 0.83479 · **0.40 0.83481 (best, final/fixed_blend_v9w40)** · 0.50 0.83478. Holdout 0.84130/0.84130/0.84125 → public peak = holdout plateau edge.
+  student-d alpha 0.0 (pure teacher, 4 seeds) 0.83985 single, adds 0 to the blend → alpha 0.3 was the best; distillation line closed at v9w40.
