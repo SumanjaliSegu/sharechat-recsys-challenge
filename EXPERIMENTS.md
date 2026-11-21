@@ -319,3 +319,9 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - PLR-k (H 256, drop 0.35, k 24 d 16): 0.83898/0.83900 (2-seed 0.83933); blend w0.25 0.84128/0.84020; v7 nets + k (10) 0.84127/0.84019 (+0.00001 over v7) → PLR family saturating at ~+0.00015.
 - 20 Nov 23:40 — loose-end check: tree models never tested with the PLR networks. v7 + linear-tree LGB ×2 + LGB seeds 11/23/2026 + XGB seeds 4/5/6 = **v8: holdout 0.84131 / 0.84023 (+0.00005) → public 0.83470 (worse than v7 0.83477)**.
   → Extra tree models do not transfer to test; the network changes did (v5/v6h/v7 all transferred ~90–100%). v7 stays best.
+- 21 Nov 07:40 — overnight results (all vs v7 0.84126/0.84018):
+  · Residual specialist (video-rate offset): A=1.0 0.83112, A=0.5 0.83764 alone (base 0.83995); as extra 5–15% → worse. Closed.
+  · Hard-example weighting: λ1 0.83952, λ3 0.83824 alone; λ1 as LGB group 0.84125/0.84017 → no gain. Closed.
+  · max_bin 255/511/1023: 0.83975/0.83977/0.83996 (127: 0.83995) → bins were not limiting. As LGB group: 0.84126 = v7. Closed.
+  · PLR-j2 (k32 d24 seeds 2–5): 0.83873/0.83917/0.83901/0.83917; 12 nets single 0.83954 but blend = v7. PLR family saturated.
+- Forum read 20 Nov late: host on our thread 759936 and on 760657 (distillation): "The model which predicts on the test dataset must not use features derived from request_id/request grouping." Host 759267: if top solutions are ineligible, prizes go by private LB rank among the rest.
