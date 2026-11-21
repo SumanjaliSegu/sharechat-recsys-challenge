@@ -20,6 +20,27 @@ TE_KEYS = ["feature18", "feature23", "feature20", "feature9", "feature12",
 K = 5
 ALPHA = 30.0
 
+# Optional: user-taste cluster keys (ucl_build.py). UCL=<dir with ucl_train.parquet (rn order) / ucl_test.parquet (id)>.
+# Clusters come from each row's OWN user / video embeddings (KMeans fitted on training rows); the statistics per
+# cluster x content key come from training labels only (same OOF scheme as above). Test rows only look up their keys.
+import os as _os
+UCL = _os.environ.get("UCL")
+RAW_COLS = list(TE_KEYS)                      # columns read from the parquet files
+if UCL:
+    TE_KEYS = ["u32", "u128", "u512", "u32_f20", "u32_f23", "u128_f23", "u128_f20",
+               "u128_v256", "u512_v256", "u32_f18"]
+    RAW_COLS = ["feature5"]
+
+
+def add_keys(df, split):
+    """Attach cluster key columns: split='train' joins by row number rn, 'test' by id."""
+    if not UCL or all(k in df.columns for k in TE_KEYS):
+        return df
+    on = "rn" if split == "train" else "id"
+    t = pl.read_parquet(f"{UCL}/ucl_{split}.parquet")
+    df = df.with_columns(pl.col(on).cast(t[on].dtype))
+    return df.join(t, on=on, how="left", maintain_order="left")
+
 
 def te_names():
     out = []

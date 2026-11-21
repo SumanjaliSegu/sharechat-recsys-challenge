@@ -152,8 +152,8 @@ TEMAPS = None
 
 def build_te(stage):
     """Training rows in the reference set: OOF stats. Rows outside: full-ref stats."""
-    cols = list(dict.fromkeys(["feature1", "watched"] + temod.TE_KEYS))
-    d = pl.read_parquet(f"{DATA}/train.parquet", columns=cols).with_row_index("rn")
+    cols = list(dict.fromkeys(["feature1", "watched"] + temod.RAW_COLS))
+    d = temod.add_keys(pl.read_parquet(f"{DATA}/train.parquet", columns=cols).with_row_index("rn"), "train")
     if stage == "valid":
         ref = d.filter(pl.col("feature1") < CUT)
         other = d.filter(pl.col("feature1") >= CUT)
@@ -518,10 +518,10 @@ if __name__ == "__main__":
         for g in range(pf_te.metadata.num_row_groups):
             tcols = ["id"] + [c for c in READ_COLS if c != "watched"]
             if TE:
-                tcols += [k for k in temod.TE_KEYS if k not in tcols]
+                tcols += [k for k in temod.RAW_COLS if k not in tcols]
             df = pl.from_arrow(pf_te.read_row_group(g, columns=tcols))
             if TE:
-                df = pl.concat([df, temod.apply_maps(df, *TEMAPS)], how="horizontal")
+                df = pl.concat([df, temod.apply_maps(temod.add_keys(df, "test"), *TEMAPS)], how="horizontal")
             if KNN:
                 if "feature18" not in df.columns:
                     df = df.with_columns(pl.from_arrow(pf_te.read_row_group(g, columns=["feature18"]))["feature18"])
