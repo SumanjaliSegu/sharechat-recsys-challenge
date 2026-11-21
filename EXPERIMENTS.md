@@ -345,3 +345,4 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
   User embeddings checked as a persistent user key: 435k vectors for 421k sessions, 0.6% of test rows seen → per-session, no user id.
   · **ucl RESULT**: holdout 0.83993 (base 0.83995, best iter 413); cluster rates are used (te_r_u32_f20 #21, te_r_u128_v256 #23 by gain) but replace existing signal (spearman vs LGB component 0.9974); in v9w40 +0 as LGB group, extra 0.05–0.2 ≤ 0 → closed. Cluster stats into the nets not pursued (nets already see the raw embeddings).
   · Launched sharechat-plr-pair: wide PLR net, BCE + 0.5 × in-batch pairwise softplus(−(z⁺−z⁻)) over random batches (PAIR_LAM in nn2_multi.py), seeds 0,1.
+  · **plr-pair RESULT**: seeds 0.83926 / 0.83905 (mean 0.83942, below plain PLR 0.8395), spearman vs nets 0.9964; in v9w40 +0.00001 → closed. sharechat-pair (XGB rank:pairwise) stuck QUEUED ~4 h (GPU quota?).
