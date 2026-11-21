@@ -96,6 +96,11 @@ def featurize(df, vocab):
         + [pl.col(c).replace_strict(vocab[c], default=-1, return_dtype=pl.Int32).alias(c)
            for c in STR_COLS]
     )
+    if NULLCNT:  # row-local: how many of this row's own raw columns are missing (total and by column block)
+        raw = [c for c in READ_COLS if c != "watched" and c in df.columns]
+        blocks = {"all": raw, "u": [c for c in raw if c in NC_USER], "p": [c for c in raw if c not in NC_USER]}
+        out = out.with_columns([pl.Series(f"nnull_{k}", df.select(pl.sum_horizontal([pl.col(c).is_null().cast(pl.Int16) for c in v]))
+                                          .to_series().cast(pl.Float32)) for k, v in blocks.items() if v])
     if USE_EMB:
         out = pl.concat([out, emb_feats(df)], how="horizontal")
     if STABLE:
@@ -261,6 +266,10 @@ if IST:
     TAG += "_ist"
 DROPH = "--dropH" in sys.argv or "--stable" in sys.argv
 STABLE = "--stable" in sys.argv
+NULLCNT = "--nullcnt" in sys.argv
+NC_USER = set(json.load(open(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "col_groups.json")))["user"]) if NULLCNT else set()
+if NULLCNT:
+    TAG += "_nullcnt"
 NOCATID = "--nocatid" in sys.argv
 H_COLS = [f"feature{i}" for i in range(154, 287)]
 if "--fullho" in sys.argv:
