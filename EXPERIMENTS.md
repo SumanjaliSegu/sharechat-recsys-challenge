@@ -361,3 +361,4 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - sharechat-pair v2 failed: my re-pack had put xgb_pair.py in place of train_lgb.py. Fixed (both embedded files verified byte-identical), pushed v3.
 - 22 Nov — **pairwise XGBoost RESULT** (sharechat-pair v3, rank:pairwise, random 1000-row groups): best 0.83336 at 250 rounds, then falls to 0.818 and slowly recovers to 0.8297 at 4000 (normal XGB ≈ 0.839). In v9w40: as an XGB group 0.84121 / 0.84012, extra 5% 0.84129 / 0.84021 → hurts. Closed. Official rank 51/92.
 - 22 Nov — **column weighting** (train_lgb.py --fcontri=IMP:TOPN:HI:LO, LightGBM feature_contri; importance from the G run, imp_g.csv): Kaggle CPU sharechat-fca (top-30 columns x1.5) and sharechat-fcb (columns outside top-100 x0.5), G lr0.03 ist, valid + full (base 0.83995).
+- 22 Nov — sharechat-student-e (GPU): wider PLR students k32/d24, alpha 0.1, seeds 4–7 (same teacher). Judge as extra networks group in v9w40.
