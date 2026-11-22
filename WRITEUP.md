@@ -82,7 +82,14 @@ raw embedding coordinates as tree inputs · CatBoost with embedding features ·
 **user-taste clusters** (KMeans on each row's own user embeddings, k 32/128/512, × creator / category /
 video-cluster watch rates from training labels: used by the trees but 0.83993 vs 0.83995, 0 in the blend) ·
 **pairwise AUC loss** for the PLR network (BCE + 0.5 × in-batch watched-vs-skipped softplus; 0.8394, +0.00001
-in the blend) · user embeddings as a persistent-user key (they change per session: 0.6% of test rows seen).
+in the blend) · user embeddings as a persistent-user key (they change per session: 0.6% of test rows seen) ·
+missing-value counts per row (0.83978 vs 0.83995) · logit / probability-space blending instead of ranks (±0.00001) ·
+**time-aware (past-only) training rates** (each training row sees only earlier hours, as a test row does:
+0.84004 vs 0.83995, +0.00002 in the blend) · pairwise-ranking XGBoost on random row groups (0.8334) ·
+wider distilled students (k32/d24, 0.8400, 0 in the blend) ·
+**column down-weighting** (LightGBM `feature_contri` 0.5 outside the top-100 columns by gain: real but small,
++0.00007 on the slow arm and +0.00013 over like-for-like unweighted models; blend v10 holdout 0.84136 vs 0.84130,
+but **public 0.83478 vs 0.83481** — like v8, tree-side holdout gains below +0.0002 did not transfer).
 **Drop from validation to public is uniform:** each family submitted alone loses 0.0059–0.0069
 (LightGBM 0.84069→0.83435, XGBoost 0.84060→0.83411, CatBoost 0.83964→0.83278, networks 0.83702→0.83116),
 and validation AUC shows no decay across the 24 h holdout → no family is under-weighted for the later test days.
