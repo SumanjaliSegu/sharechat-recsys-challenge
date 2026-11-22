@@ -321,6 +321,7 @@ def predict(model, X, bs=16384):
 
 
 PAIR_LAM = float(os.environ.get("PAIR_LAM", "0"))  # weight of the pairwise ranking term (0 = plain BCE)
+EMA = float(os.environ.get("EMA", "0"))  # >0: exponential moving average of the weights (decay per step); predict with it
 
 
 def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=192, seed=0, nopost=False,
@@ -354,6 +355,10 @@ def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=
     amp = DEV == "cuda"
     scaler = torch.amp.GradScaler("cuda", enabled=amp)
     hist = []
+    ema = None
+    if EMA:
+        from torch.optim.swa_utils import AveragedModel, get_ema_multi_avg_fn
+        ema = AveragedModel(model, multi_avg_fn=get_ema_multi_avg_fn(EMA), use_buffers=True)
     for ep in range(epochs):
         model.train(); perm = np.random.permutation(len(y)); tl = 0.0; k = 0
         for k, i in enumerate(range(0, len(y), bs)):
@@ -369,14 +374,16 @@ def train(X, y, cards, epochs, val=None, lr=1e-3, bs=8192, wd=1e-4, drop=0.3, H=
             scaler.scale(loss).backward(); scaler.unscale_(opt)
             nn.utils.clip_grad_norm_(model.parameters(), 1.0)
             scaler.step(opt); scaler.update(); sched.step(); tl += loss.item()
+            if ema is not None:
+                ema.update_parameters(model)
         msg = f"epoch {ep + 1}/{epochs} loss {tl / (k + 1):.4f}"
         if val is not None:
             Xv, yv = val
             if nopost:
                 Xv = dict(Xv); Xv["pcat"] = Xv["pcat"].copy(); Xv["pcat"][:, 0] = 0
-            auc = roc_auc_score(yv, predict(model, Xv)); hist.append(auc); msg += f" holdout_auc {auc:.5f}"
+            auc = roc_auc_score(yv, predict(ema.module if ema is not None else model, Xv)); hist.append(auc); msg += f" holdout_auc {auc:.5f}"
         log(msg)
-    return model, hist
+    return (ema.module if ema is not None else model), hist
 
 
 if __name__ == "__main__":
