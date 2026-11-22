@@ -410,7 +410,20 @@ if MONO:
     TAG += "_mono"
 
 
+# --fcontri=IMP_CSV:TOPN:HI:LO  column weighting via LightGBM feature_contri (split gain x weight): the TOPN columns
+# by gain in IMP_CSV (an importance file from an earlier run) get HI, all other columns LO.
+FCONTRI = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--fcontri=")), None)
+if FCONTRI:
+    _fc = FCONTRI.split(":")
+    TAG += f"_fc{_fc[1]}x{_fc[2]}x{_fc[3]}"
+
+
 def set_mono(names):
+    if FCONTRI:
+        f, n, hi, lo = FCONTRI.split(":")
+        top = set(pl.read_csv(f).sort("gain", descending=True)["feat"].head(int(n)).to_list())
+        PARAMS["feature_contri"] = [float(hi) if c in top else float(lo) for c in names]
+        log(f"feature_contri: {sum(c in top for c in names)} columns x{hi}, {len(names) - sum(c in top for c in names)} x{lo}")
     if MONO:
         PARAMS["monotone_constraints"] = [-1 if n == "feature54" else 0 for n in names]
         PARAMS["monotone_constraints_method"] = "advanced"
