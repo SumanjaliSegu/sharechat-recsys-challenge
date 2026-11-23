@@ -376,3 +376,8 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - Singles: ema1 0.83981 / 0.83984 vs st_c 0.83979 / 0.83982 (+0.00002); ema2 slightly worse.
 - Blend (v9w40 = 0.84130 / 0.84022): swapping in ema1 gives 0.84130 / 0.84022, adding it as an extra group gives 0.84129 / 0.84022. ema2 is worse in both.
 - Verdict: no gain, not adopted. Finals stay v9w40 + v7.
+
+### 23 Nov — out-of-the-box round
+- Exact-repeat lookup: full rows hashed (all features except id, request_id, feature5, feature1). Test rows found in train 0.0%; holdout rows found in earlier train 0.0% → no repeats, closed.
+- Second-pick hedge: Spearman vs v9w40 on test: v7 0.99981 · v9 / v9w50 0.99992 · v10 0.99988 · v8 0.99966 · v3 0.99895. All blends are almost the same ranking, so a "different" second pick cannot hedge in practice; v7 is already the least-correlated high scorer → finals stay v9w40 + v7.
+- TabPFN v2 (fallback TabICL) as a new model type: tabpfn_run.py, top 100 raw numeric features, 10k random context rows per bag, up to 4 bags, time budget 8 h. Kaggle GPU sharechat-tabpfn. Rule: add as a networks group in v9w40, accept only at +0.0002 on both checks.
