@@ -370,3 +370,9 @@ Rule (fixed in advance): consider only if best arm >= +0.0005 over S0 AND gain s
 - 23 Nov — **fcslow RESULT**: slow lr0.01 neg1.0 + column down-weighting 0.84031 (same arm unweighted 0.84024, +0.00007). Blend: slow-fc as 50–75% of LGB 0.84133/0.84026; (slow-fc + 3 fcb seeds) as 75–100% of LGB 0.84136/0.84029 (+0.00006/+0.00006). Below the +0.0002 bar → v9w40 stays final. Column-weighting line closed (real but small: ~+0.0001 on single models, +0.00006 in the blend).
 - 23 Nov — **Fixed Blend v10** (final/fixed_blend_v10 = v9w40 with LightGBM = column-down-weighted slow arm + 3 G seeds; holdout 0.84136): **public 0.83478** vs v9w40 0.83481 → tree gain did not transfer again (as v8). v9w40 stays final, v7 backup.
 - 23 Nov — **weight averaging (EMA) for networks** — the one network-side idea never tried. nn2_multi.py EMA=<decay> (torch AveragedModel, per step; validation and predictions use the averaged weights; off by default). Kaggle GPU sharechat-ema1 (0.99) / -ema2 (0.995), student config st_c (alpha 0.1, k24/d16, seeds 0,1); same-seed baseline st_c s0 0.83979 / s1 0.83982.
+
+### Weight averaging (EMA) on distilled PLR students (23 Nov)
+- EMA 0.99 / 0.995, seeds 0-1, same setup as st_c otherwise.
+- Singles: ema1 0.83981 / 0.83984 vs st_c 0.83979 / 0.83982 (+0.00002); ema2 slightly worse.
+- Blend (v9w40 = 0.84130 / 0.84022): swapping in ema1 gives 0.84130 / 0.84022, adding it as an extra group gives 0.84129 / 0.84022. ema2 is worse in both.
+- Verdict: no gain, not adopted. Finals stay v9w40 + v7.
