@@ -1,0 +1,13 @@
+<section id="models">
+<p class="eyebrow">MODELS</p>
+<h2>Four families, one fixed-weight blend</h2>
+<table class="tbl">
+<tr><th style="width:34%">Family</th><th style="width:46%">What it brings</th><th style="width:20%">Weight</th></tr>
+<tr><td>LightGBM</td><td>Slow, DART and big-leaf variants, several seeds</td><td>0.282</td></tr>
+<tr><td>XGBoost</td><td>GPU, three seeds</td><td>0.212</td></tr>
+<tr><td>CatBoost</td><td>Depth 8 and 10, two seeds</td><td>0.106</td></tr>
+<tr><td>Networks</td><td>PLR towers + distilled students</td><td>0.400</td></tr>
+</table>
+<p class="lead">Rank average with fixed weights. A stack with learned weights scored higher on holdout but lower on public: it was fitting noise.</p>
+<aside>Fixed weights are a deliberate choice for robustness on the private leaderboard.</aside>
+</section>

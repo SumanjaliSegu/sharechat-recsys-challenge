@@ -1,0 +1,10 @@
+<section id="drift" class="alt">
+<p class="eyebrow">DRIFT CONTROL</p>
+<h2>Train and test were easy to tell apart</h2>
+<div class="row">
+<div class="card"><p class="big">0.98</p><p class="txt">adversarial AUC: a model could tell train rows from test rows almost perfectly</p></div>
+<div class="card"><h3>What we changed</h3><p class="txt">Raw cumulative counters → per-post-age-hour versions and ratios. Upload epochs → ages. Creator, category and post ids removed. Four drifting user×post rates dropped.</p></div>
+<div class="card"><p class="bigblue">+0.0009</p><p class="txt">our largest single gain, checked two days ahead</p></div>
+</div>
+<aside>Popularity counters keep growing over time, so a model trained on them learns the calendar, not the user. Re-expressing them relative to the post’s age removed most of the drift.</aside>
+</section>

@@ -1,0 +1,12 @@
+<section id="serving">
+<p class="eyebrow">FROM LEADERBOARD TO FEED</p>
+<h2>What would actually ship</h2>
+<table class="tbl">
+<tr><th style="width:34%">Option</th><th style="width:22%">Public AUC</th><th style="width:24%">Model time per row</th><th style="width:20%">Size</th></tr>
+<tr><td>One LightGBM, 421 trees</td><td>0.83346</td><td>0.14 ms</td><td>3.1 MB</td></tr>
+<tr><td>One slow LightGBM, 1,625 trees</td><td>—</td><td>0.63 ms</td><td>12 MB</td></tr>
+<tr><td>Full blend, 32 models</td><td>0.83481</td><td>many × above</td><td>&gt;1 GB of preds</td></tr>
+</table>
+<p class="lead">The 32-model blend buys +0.0014 AUC. In a feed I would ship one LightGBM, add one distilled student if the latency budget allows, and spend the effort on logging feed position instead.</p>
+<aside>Timed on a laptop, one CPU core, model scoring only (feature building not included). Network weights were not kept, so they are not timed here.</aside>
+</section>

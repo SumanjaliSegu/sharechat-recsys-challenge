@@ -1,0 +1,10 @@
+<section id="plr" class="alt">
+<p class="eyebrow">IDEA 1 · PERIODIC EMBEDDINGS</p>
+<h2>Teaching the network to read numbers</h2>
+<div class="row">
+<div class="card"><h3>User · post · pair towers</h3><p class="txt">Separate towers for user, post and user×post features, joined at the top.</p></div>
+<div class="card"><h3>PLR inputs</h3><p class="txt">Each numeric column becomes sin/cos features at learned frequencies, then a small linear layer (Gorishniy et al., NeurIPS 2022).</p></div>
+<div class="card"><p class="bigblue">0.8370 → 0.8395</p><p class="txt">network holdout AUC; the first change that moved the public score</p></div>
+</div>
+<aside>Plain MLPs struggle with skewed numeric columns. Periodic embeddings give the network a much richer view of each number, which is what tree models do naturally with splits.</aside>
+</section>

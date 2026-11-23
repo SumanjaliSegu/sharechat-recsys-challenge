@@ -1,0 +1,11 @@
+<section id="validation">
+<p class="eyebrow">VALIDATION</p>
+<h2>A holdout that behaves like the test days</h2>
+<div class="row">
+<div class="card"><h3>Time split</h3><p class="txt">Train before 27 Oct 18:00, score the last 24 hours. Every number in this talk is on that unseen day.</p></div>
+<div class="card"><h3>Test-mix check</h3><p class="txt">Re-weight the holdout to the test’s 16% share of new videos. A change must win on both checks.</p></div>
+<div class="card"><h3>A strict bar</h3><p class="txt">Keep a change only at +0.0002 on both, the size of seed noise.</p></div>
+</div>
+<p class="lead">Result: holdout → public dropped by the same ~0.0065 for every model family, so the holdout ranks models the way the test does.</p>
+<aside>The uniform drop matters: it tells us no family is secretly better on the later days, so the blend weights chosen on holdout are safe for the private leaderboard.</aside>
+</section>

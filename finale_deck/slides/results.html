@@ -1,0 +1,13 @@
+<section id="results">
+<p class="eyebrow">RESULTS</p>
+<h2>Public score, step by step</h2>
+<table class="tbl">
+<tr><th style="width:30%">Blend</th><th style="width:50%">What changed</th><th style="width:20%">Public AUC</th></tr>
+<tr><td>v1</td><td>Four families, fixed weights</td><td>0.83447</td></tr>
+<tr><td>v3</td><td>More network seeds, CatBoost seed</td><td>0.83462</td></tr>
+<tr><td>v7</td><td>PLR networks</td><td>0.83477</td></tr>
+<tr><td>v9w40</td><td>+ distilled students, networks 0.40</td><td>0.83481</td></tr>
+</table>
+<p class="lead">Final picks: v9w40 and v7. Holdout 0.84130. Every submitted file rebuilds bit-for-bit from frozen predictions.</p>
+<aside>Network changes were the only ones that transferred to the public board; extra tree models gained on holdout but not on public.</aside>
+</section>

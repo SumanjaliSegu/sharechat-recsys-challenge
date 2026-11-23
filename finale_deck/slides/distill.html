@@ -1,0 +1,10 @@
+<section id="distill" class="dark">
+<p class="eyebrow">IDEA 2 · TRAINING-ONLY DISTILLATION</p>
+<h2>Use request context to train, never to predict</h2>
+<div class="row">
+<div class="card" style="background:#22335A"><h3>Teacher</h3><p class="txt" style="color:#C9D3E3">LightGBM that also sees request size and position. Out-of-fold AUC 0.886. Trained on training rows only; it never scores a test row.</p></div>
+<div class="card" style="background:#22335A"><h3>Students</h3><p class="txt" style="color:#C9D3E3">PLR networks on row-only inputs, trained on α·label + (1−α)·teacher. Same inputs as every other model at test time.</p></div>
+</div>
+<p class="quote">Host, on the forum: “the model which predicts on the test dataset must not use features derived from request_id/request grouping.”</p>
+<aside>This is how we used the strongest signal in the data while staying inside the rule. Students became our best single networks at 0.8402. The gain in the blend was small, because the blend was already saturated.</aside>
+</section>

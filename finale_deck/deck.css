@@ -1,0 +1,39 @@
+:root {
+  --ink: #14213D;
+  --paper: #F7F5F0;
+  --paper2: #ECE8DF;
+  --soft: #4A5568;
+  --accent: #C4541A;
+  --blue: #2F5F9E;
+  --onDark: #C9D3E3;
+}
+body { font-family: 'Inter', Arial, sans-serif; color: var(--ink); }
+section { padding: 128px; background: var(--paper); counter-increment: page; display: flex; flex-direction: column; gap: 40px; }
+section.alt { background: var(--paper2); }
+section.dark { background: var(--ink); color: var(--paper); }
+h1, h2, h3 { font-family: 'Space Grotesk', Arial, sans-serif; }
+h1 { font-size: 112px; font-weight: 700; line-height: 1.05; }
+h2 { font-size: 72px; font-weight: 700; line-height: 1.1; }
+h3 { font-size: 40px; font-weight: 600; line-height: 1.2; }
+p { font-size: 32px; line-height: 1.45; color: var(--soft); }
+.eyebrow { font-size: 26px; font-weight: 600; color: var(--accent); letter-spacing: 3px; }
+.dark .eyebrow { color: #F0A46E; }
+.dark p { color: var(--onDark); }
+.dark h1, .dark h2, .dark h3 { color: var(--paper); }
+.lead { font-size: 40px; line-height: 1.4; color: var(--ink); }
+.dark .lead { color: var(--paper); }
+.row { display: flex; flex-direction: row; gap: 32px; }
+.card { flex: 1; background: #FFFFFF; border-radius: 16px; padding: 40px; display: flex; flex-direction: column; gap: 16px; }
+.alt .card { background: var(--paper); }
+.card .big { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 80px; font-weight: 700; color: var(--accent); line-height: 1; }
+.card .bigblue { font-family: 'Space Grotesk', Arial, sans-serif; font-size: 80px; font-weight: 700; color: var(--blue); line-height: 1; }
+.card .txt { font-size: 28px; line-height: 1.4; color: var(--soft); }
+.quote { font-size: 40px; line-height: 1.4; color: var(--ink); border-left: 8px solid var(--accent); padding-left: 40px; }
+.dark .quote { color: var(--paper); }
+.tbl { font-size: 30px; color: var(--ink); width: 100%; }
+.dark .tbl { color: var(--paper); }
+.tags { display: flex; flex-direction: row; flex-wrap: wrap; gap: 16px; }
+.tag { font-size: 26px; background: #FFFFFF; color: var(--ink); padding: 12px 24px; border-radius: 40px; }
+.foot { position: absolute; left: 128px; bottom: 64px; width: 1664px; font-size: 24px; color: var(--soft); }
+.dark .foot { color: var(--onDark); }
+.spacer { flex: 1; }

@@ -1,0 +1,10 @@
+<section id="data" class="alt">
+<p class="eyebrow">THE DATA</p>
+<h2>Rich rows, but no persistent user</h2>
+<div class="row">
+<div class="card"><h3>User and post vectors</h3><p class="txt">7 user embeddings and 7 post embeddings of 32 dimensions each. We turned them into 49 dot and cosine match scores.</p></div>
+<div class="card"><h3>ShareChat’s own history</h3><p class="txt">~450 numeric columns, including history watch rates and user–post affinity, plus 12 low-cardinality categories.</p></div>
+<div class="card"><h3>New every session</h3><p class="txt">User vectors change per session; 93% of test users are new. Test also has 16% never-seen videos.</p></div>
+</div>
+<aside>Key finding from data exploration: there is no stable user id to memorise. That is why the approach learns general watch patterns from embeddings and history rates rather than per-user memory.</aside>
+</section>

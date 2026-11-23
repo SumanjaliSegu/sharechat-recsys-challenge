@@ -1,0 +1,11 @@
+<section id="problem">
+<p class="eyebrow">THE TASK</p>
+<h2>Will this user watch this video?</h2>
+<div class="row">
+<div class="card"><p class="big">1.54M</p><p class="txt">labelled training impressions</p></div>
+<div class="card"><p class="big">1.04M</p><p class="txt">test impressions on the 3 days that follow</p></div>
+<div class="card"><p class="big">AUC</p><p class="txt">global ROC-AUC over all test rows</p></div>
+</div>
+<p class="quote">The serving-time rule: each row is predicted on its own, from that row’s features only. No information from other rows in the same request.</p>
+<aside>This rule shaped everything. In production the model sees one impression at a time, so anything that needs to look at the other rows in a request is not allowed. A lot of easy signal sits exactly there, and we left it out on purpose.</aside>
+</section>
