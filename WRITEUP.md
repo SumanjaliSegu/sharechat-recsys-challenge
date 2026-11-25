@@ -1,5 +1,7 @@
 # ShareChat RecSys Challenge — Technical write-up
 
+**Team Spirit:** Sumanjali Segu, Pranav Kumar
+
 **Task.** Predict P(watched) for a user–video-post pair. Metric: one global ROC-AUC over all rows.
 **Constraint.** Each row must be predicted from that row's features alone (serving-time rule).
 **Primary submission (Fixed Blend v9w40).** Public AUC 0.83481; holdout AUC 0.84130 (test-mix weighted 0.84023).

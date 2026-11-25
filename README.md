@@ -1,5 +1,7 @@
 # ShareChat RecSys Challenge — solution
 
+**Team Spirit:** Sumanjali Segu, Pranav Kumar
+
 Predict the probability that a user watches a video post. Metric: global ROC-AUC.
 **Every model that scores test rows uses only the features of that row** (competition serving-time rule).
 Request-level columns appear in exactly one place: the *teacher* in `teacher.py`, which only makes soft training
