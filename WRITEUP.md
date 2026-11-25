@@ -24,8 +24,8 @@ Earlier frozen blends: v1 0.83447 · v2b 0.83460 · v3 0.83462 · v5 0.83471 · 
   close to test (7% / 84%).
 - **Far check:** train on day 1 only, score 1–2 days ahead (test is 0–3 days ahead).
 - **Test-mix weighting:** holdout re-weighted to test's 16% new-post share.
-- **Noise floor:** identical configs with different seeds differ by up to ±0.0004 → every decision used 2 seeds
-  and a ≳ +0.001 bar; single-seed differences below that were treated as noise.
+- **Noise floor:** identical configs with different seeds differ by up to ±0.0004 → single-model decisions used
+  2 seeds and a ≳ +0.001 bar; blend changes had to gain ≥ +0.0002 on **both** the plain and the test-mix holdout.
 
 ## 3. Features (all row-local)
 1. ~450 numeric columns as given, 12 low-cardinality categoricals, Indian-local hour (UTC+5:30).
@@ -89,7 +89,9 @@ missing-value counts per row (0.83978 vs 0.83995) · logit / probability-space b
 wider distilled students (k32/d24, 0.8400, 0 in the blend) ·
 **column down-weighting** (LightGBM `feature_contri` 0.5 outside the top-100 columns by gain: real but small,
 +0.00007 on the slow arm and +0.00013 over like-for-like unweighted models; blend v10 holdout 0.84136 vs 0.84130,
-but **public 0.83478 vs 0.83481** — like v8, tree-side holdout gains below +0.0002 did not transfer).
+but **public 0.83478 vs 0.83481** — like v8, tree-side holdout gains below +0.0002 did not transfer) ·
+**TabPFN v2** (pretrained in-context tabular model, 90 raw features, 10k-row context bags, `tabpfn_run.py`:
+0.8168 alone, lower blend AUC at every weight) · EMA of network weights (0).
 **Drop from validation to public is uniform:** each family submitted alone loses 0.0059–0.0069
 (LightGBM 0.84069→0.83435, XGBoost 0.84060→0.83411, CatBoost 0.83964→0.83278, networks 0.83702→0.83116),
 and validation AUC shows no decay across the 24 h holdout → no family is under-weighted for the later test days.
@@ -120,13 +122,18 @@ grouping"*. We use request features only as a training signal:
   α·label + (1−α)·teacher probability (α 0.5 / 0.3 / 0.1). At test time they receive exactly the same inputs as
   every other model. Gain: +0.0007 single-network AUC; +0.00002 public in the blend (v9 vs v7).
 
-## 8. Limitations and next steps
+## 8. Serving cost
+Measured with `serve_time.py` (one CPU thread): the fast LightGBM (421 trees, 3.1 MB) takes **0.14 ms per row**;
+the slow LightGBM (1,625 trees, 12 MB) 0.63 ms per row. The full blend gains about +0.0014 AUC over one model, so
+a production version would be one LightGBM plus one distilled student network, both row-only.
+
+## 9. Limitations and next steps
 - New / young posts remain hardest (AUC 0.825 vs 0.842 for posts seen in training).
 - The validation→public gap (~0.006) is partly explained by test's larger share of new posts (≈0.001).
 - With serving-time request context (e.g. a feed-slot feature logged at impression time), position-aware
   modelling would be the largest available gain.
 
-## 9. Reproduce
+## 10. Reproduce
 See `README.md`. `final/fixed_blend_v9w40/MANIFEST.json` records every component (files, groups, weights,
 checksums); `python ensemble.py final/fixed_blend_v9w40 --holdout` rebuilds the exact submitted file and reports
 holdout AUC 0.84130. `python run_all.py` retrains every component (stages lgb, xgb, catboost, nets, teacher,

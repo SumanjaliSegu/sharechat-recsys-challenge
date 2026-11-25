@@ -7,6 +7,21 @@ targets for row-only student networks and never scores a test row (see WRITEUP.m
 
 Final submission: **Fixed Blend v9w40**: public AUC 0.83481, holdout 0.84130. Backup: Fixed Blend v7, 0.83477.
 
+## Rule compliance at a glance (for reviewers)
+- [x] Every model that scores a test row sees **only that row's features**: no request_id grouping, no counts or
+      positions over other rows, no test-set statistics.
+- [x] Request-level columns are used **only** by `teacher.py`, out-of-fold on training rows, to make soft training
+      targets. The teacher never scores a test row (WRITEUP.md §7).
+- [x] Vocabularies, quantiles and normalisation constants are fitted on training data only.
+- [x] Both selected final submissions rebuild exactly from frozen predictions:
+      `python ensemble.py final/fixed_blend_v9w40` and `python ensemble.py final/fixed_blend_v7`.
+- [x] No external data; open-source libraries only (`requirements.txt`).
+
+## Serving cost
+One LightGBM from the blend (421 trees, 3.1 MB) scores **0.14 ms per row on one CPU core** (`serve_time.py`).
+The full 32-model blend adds only about +0.0014 AUC over a single model, so the single model plus one distilled
+student network is what we would ship.
+
 ## Approach (summary)
 1. **Validation that mirrors test.** Train on rows before 2026-10-27 18:00 and score the last 24 h of train.
    We also report a test-mix AUC, re-weighted to the test set's 16% share of new videos.
