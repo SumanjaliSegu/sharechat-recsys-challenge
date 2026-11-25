@@ -1,0 +1,348 @@
+{
+ "name": "fixed_blend_v10",
+ "public_auc": 0.83478,
+ "holdout_auc_plain": 0.84112,
+ "holdout_auc_testmix": 0.84002,
+ "blend": "v9w40 with LightGBM replaced by column-down-weighted LightGBM (feature_contri)",
+ "submission_file": "submission_fixed_blend_v10.csv",
+ "components": {
+  "lightgbm": {
+   "weight": 0.282353,
+   "how": [
+    "Kaggle sharechat-lgb-multi: train_lgb.py valid/full --emb --nopost --reg --fullho --stable --nocatid --dropE --ff=0.5 --lr=0.01 --ist --neg=1.0 --iters=1.15*best",
+    "Kaggle sharechat-lgb-run v2: same flags with --lr=0.03 (no --ist), seeds 42,7,99,123,2026, --iters=1.15*mean best",
+    "Kaggle sharechat-lgb-seeds: lr0.01 all-rows variant, seeds 7 and 99 (group 0 = slow LightGBM x3 seeds)",
+    "Kaggle sharechat-dart-big: group 2 = DART (lr 0.05, 1500 rounds, --ist), group 3 = 127 leaves / min_leaf 400 (lr 0.01, all rows, --ist)"
+   ],
+   "note": "column-down-weighted LightGBM (train_lgb.py --fcontri=imp_g.csv:100:1:0.5): group 0 slow lr0.01 neg1.0, group 1 G lr0.03 seeds 42/7/99",
+   "test": [
+    {
+     "file": "test_preds/lightgbm__fcslow__submission_lgb_v2emb_nopost_lr0.01_ist_fullho_dropH_stable_nocatid_dropE_neg1.0_reg_ff0.5_fc100x1x0.5.csv",
+     "sha256_16": "3e9a31fbc60cf029",
+     "group": 0
+    },
+    {
+     "file": "test_preds/lightgbm__fcb__submission_lgb_v2emb_nopost_lr0.03_ist_fullho_dropH_stable_nocatid_dropE_reg_ff0.5_fc100x1x0.5.csv",
+     "sha256_16": "bfd9c8fa9959454f",
+     "group": 1
+    },
+    {
+     "file": "test_preds/lightgbm__fcseed__submission_lgb_v2emb_nopost_lr0.03_ist_fullho_dropH_stable_nocatid_dropE_s7_reg_ff0.5_fc100x1x0.5.csv",
+     "sha256_16": "f0dc53a036df7fe0",
+     "group": 1
+    },
+    {
+     "file": "test_preds/lightgbm__fcseed__submission_lgb_v2emb_nopost_lr0.03_ist_fullho_dropH_stable_nocatid_dropE_s99_reg_ff0.5_fc100x1x0.5.csv",
+     "sha256_16": "999ec671575542ec",
+     "group": 1
+    }
+   ],
+   "holdout": [
+    {
+     "file": "holdout_preds/lightgbm__fcslow__hopred_v2emb_nopost_lr0.01_ist_fullho_dropH_stable_nocatid_dropE_neg1.0_reg_ff0.5_fc100x1x0.5.npy",
+     "sha256_16": "214c4f3c71720482",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/lightgbm__fcb__hopred_v2emb_nopost_lr0.03_ist_fullho_dropH_stable_nocatid_dropE_reg_ff0.5_fc100x1x0.5.npy",
+     "sha256_16": "6272e945896ad83d",
+     "group": 1
+    },
+    {
+     "file": "holdout_preds/lightgbm__fcseed__hopred_v2emb_nopost_lr0.03_ist_fullho_dropH_stable_nocatid_dropE_s7_reg_ff0.5_fc100x1x0.5.npy",
+     "sha256_16": "a8a7c886bea5afd1",
+     "group": 1
+    },
+    {
+     "file": "holdout_preds/lightgbm__fcseed__hopred_v2emb_nopost_lr0.03_ist_fullho_dropH_stable_nocatid_dropE_s99_reg_ff0.5_fc100x1x0.5.npy",
+     "sha256_16": "42276c659872bf1e",
+     "group": 1
+    }
+   ]
+  },
+  "xgboost": {
+   "weight": 0.211765,
+   "how": [
+    "Kaggle GPU sharechat-xgb-cb: xgb_cb_run.py (G features + --ist, all rows)",
+    "Kaggle GPU sharechat-xgb-seeds: xgb_seeds.py with XSEED=2,3 (xgboost 3.4.1)"
+   ],
+   "note": "",
+   "test": [
+    {
+     "file": "test_preds/xgboost__xc_k__submission_xgb.csv",
+     "sha256_16": "14c136f2679d41d5",
+     "group": 0
+    },
+    {
+     "file": "test_preds/xgboost__xs_k__submission_xgb_s2.csv",
+     "sha256_16": "5e30df3cdfba4565",
+     "group": 0
+    },
+    {
+     "file": "test_preds/xgboost__xs_k__submission_xgb_s3.csv",
+     "sha256_16": "bc658e3906df7d88",
+     "group": 0
+    }
+   ],
+   "holdout": [
+    {
+     "file": "holdout_preds/xgboost__xc_k__xgb_holdout_pred.npy",
+     "sha256_16": "cb6e40aea58b40a3",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/xgboost__xs_k__xgb_holdout_pred_s2.npy",
+     "sha256_16": "d590eea97a215aa4",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/xgboost__xs_k__xgb_holdout_pred_s3.npy",
+     "sha256_16": "e768dbd3d96d33c9",
+     "group": 0
+    }
+   ]
+  },
+  "catboost": {
+   "weight": 0.105882,
+   "how": [
+    "Kaggle GPU sharechat-catboost: catboost_run.py (depth 8)",
+    "Kaggle GPU sharechat-xgb-cb: xgb_cb_run.py (depth 10, seed 7)",
+    "Kaggle GPU sharechat-night-seeds: catboost_run.py CBSEED=7 (depth 8)"
+   ],
+   "note": "rank mean of 2 CatBoosts",
+   "test": [
+    {
+     "file": "test_preds/catboost__cb_k__submission_catboost_G.csv",
+     "sha256_16": "131c110bc852ebf3",
+     "group": 0
+    },
+    {
+     "file": "test_preds/catboost__xc_k__submission_cb2.csv",
+     "sha256_16": "3b64f92c24ce76cd",
+     "group": 0
+    },
+    {
+     "file": "test_preds/catboost__ns_k__submission_catboost_G_s7.csv",
+     "sha256_16": "09305fab4ced4f64",
+     "group": 0
+    }
+   ],
+   "holdout": [
+    {
+     "file": "holdout_preds/catboost__cb_k__cb_holdout_pred.npy",
+     "sha256_16": "e853482f3850e6a0",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/catboost__xc_k__cb2_holdout_pred.npy",
+     "sha256_16": "65b69f4ddf214f61",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/catboost__ns_k__cb_holdout_pred_s7.npy",
+     "sha256_16": "fbee5e469971125c",
+     "group": 0
+    }
+   ]
+  },
+  "networks": {
+   "weight": 0.4,
+   "how": [
+    "Kaggle GPU sharechat-towers-multi: nn2_multi.py (structured towers, seeds 0,1,2)",
+    "Kaggle GPU sharechat-dcn v1: nn.py (DCN-v2, best epoch 2)",
+    "Kaggle GPU sharechat-night-seeds: nn2_multi.py TSEEDS=3,4,5 (towers x6 seeds total)"
+   ],
+   "note": "PLR towers (sigma 0.3) x8 from ['out/ph_k', 'out/ph2_k', 'out/pj_k'] | group 1: teacher-student PLR students ['st_a', 'st_b', 'st_c']",
+   "test": [
+    {
+     "file": "test_preds/networks__ph_k__submission_nn2_t_plr_s0.csv",
+     "sha256_16": "25793a49e65baaa8",
+     "group": 0
+    },
+    {
+     "file": "test_preds/networks__ph_k__submission_nn2_t_plr_s1.csv",
+     "sha256_16": "103d74f295fb866f",
+     "group": 0
+    },
+    {
+     "file": "test_preds/networks__ph2_k__submission_nn2_t_plr_s2.csv",
+     "sha256_16": "d2b0b3097565ed93",
+     "group": 0
+    },
+    {
+     "file": "test_preds/networks__ph2_k__submission_nn2_t_plr_s3.csv",
+     "sha256_16": "d1f7f815f358f4a3",
+     "group": 0
+    },
+    {
+     "file": "test_preds/networks__ph2_k__submission_nn2_t_plr_s4.csv",
+     "sha256_16": "531946f727b469cd",
+     "group": 0
+    },
+    {
+     "file": "test_preds/networks__ph2_k__submission_nn2_t_plr_s5.csv",
+     "sha256_16": "ffe332cf2f433913",
+     "group": 0
+    },
+    {
+     "file": "test_preds/networks__pj_k__submission_nn2_t_plr_s0.csv",
+     "sha256_16": "faafa4a738c80ecf",
+     "group": 0
+    },
+    {
+     "file": "test_preds/networks__pj_k__submission_nn2_t_plr_s1.csv",
+     "sha256_16": "5d48fe65324463f1",
+     "group": 0
+    },
+    {
+     "file": "test_preds/networks__st_a__submission_nn2_t_plr_s0.csv",
+     "sha256_16": "f74b62e6105795ba",
+     "group": 1
+    },
+    {
+     "file": "test_preds/networks__st_a__submission_nn2_t_plr_s1.csv",
+     "sha256_16": "eeffabbe548bdfc5",
+     "group": 1
+    },
+    {
+     "file": "test_preds/networks__st_b__submission_nn2_t_plr_s0.csv",
+     "sha256_16": "9f1c2b617f27ea6a",
+     "group": 1
+    },
+    {
+     "file": "test_preds/networks__st_b__submission_nn2_t_plr_s1.csv",
+     "sha256_16": "a59c1c570c6a6eea",
+     "group": 1
+    },
+    {
+     "file": "test_preds/networks__st_c__submission_nn2_t_plr_s0.csv",
+     "sha256_16": "c4975b92373e214c",
+     "group": 1
+    },
+    {
+     "file": "test_preds/networks__st_c__submission_nn2_t_plr_s1.csv",
+     "sha256_16": "f92fd428766d5d53",
+     "group": 1
+    },
+    {
+     "file": "test_preds/networks__st_c__submission_nn2_t_plr_s2.csv",
+     "sha256_16": "0fe0800151bc8ebe",
+     "group": 1
+    },
+    {
+     "file": "test_preds/networks__st_c__submission_nn2_t_plr_s3.csv",
+     "sha256_16": "e91690ce26e6a3fe",
+     "group": 1
+    }
+   ],
+   "holdout": [
+    {
+     "file": "holdout_preds/networks__ph_k__nn_holdout_pred_t_plr_s0.npy",
+     "sha256_16": "239e9e3f59db1ad4",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/networks__ph_k__nn_holdout_pred_t_plr_s1.npy",
+     "sha256_16": "9b6b8e7ff3e964ed",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/networks__ph2_k__nn_holdout_pred_t_plr_s2.npy",
+     "sha256_16": "94bd07fa1794faba",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/networks__ph2_k__nn_holdout_pred_t_plr_s3.npy",
+     "sha256_16": "a39a154aae682c3a",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/networks__ph2_k__nn_holdout_pred_t_plr_s4.npy",
+     "sha256_16": "a8db13c1daf40089",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/networks__ph2_k__nn_holdout_pred_t_plr_s5.npy",
+     "sha256_16": "a0abd9e18a912dc9",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/networks__pj_k__nn_holdout_pred_t_plr_s0.npy",
+     "sha256_16": "ec579fec088b8415",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/networks__pj_k__nn_holdout_pred_t_plr_s1.npy",
+     "sha256_16": "3ea5d638d61670b0",
+     "group": 0
+    },
+    {
+     "file": "holdout_preds/networks__st_a__nn_holdout_pred_t_plr_s0.npy",
+     "sha256_16": "97ceed7bdf9024e9",
+     "group": 1
+    },
+    {
+     "file": "holdout_preds/networks__st_a__nn_holdout_pred_t_plr_s1.npy",
+     "sha256_16": "cc4150aee8659b1e",
+     "group": 1
+    },
+    {
+     "file": "holdout_preds/networks__st_b__nn_holdout_pred_t_plr_s0.npy",
+     "sha256_16": "ccefdf38316df2cb",
+     "group": 1
+    },
+    {
+     "file": "holdout_preds/networks__st_b__nn_holdout_pred_t_plr_s1.npy",
+     "sha256_16": "81badc6697128d09",
+     "group": 1
+    },
+    {
+     "file": "holdout_preds/networks__st_c__nn_holdout_pred_t_plr_s0.npy",
+     "sha256_16": "8fa1e06a31eda530",
+     "group": 1
+    },
+    {
+     "file": "holdout_preds/networks__st_c__nn_holdout_pred_t_plr_s1.npy",
+     "sha256_16": "50849a3fa4c689ae",
+     "group": 1
+    },
+    {
+     "file": "holdout_preds/networks__st_c__nn_holdout_pred_t_plr_s2.npy",
+     "sha256_16": "7c6d28fc3ebc791d",
+     "group": 1
+    },
+    {
+     "file": "holdout_preds/networks__st_c__nn_holdout_pred_t_plr_s3.npy",
+     "sha256_16": "d0e790f1d0b5af94",
+     "group": 1
+    }
+   ]
+  }
+ },
+ "code": {
+  "train_lgb.py": "9925c9359e1f8501",
+  "nn.py": "d0a7a617b70f171c",
+  "nn2.py": "3202adddd36a84aa",
+  "nn2_multi.py": "b0043657fd3079f7",
+  "nn_df.py": "73381b02082eb7bb",
+  "catboost_run.py": "a14edd77c7b2a37b",
+  "xgb_cb_run.py": "8328e260a36ba758",
+  "kaggle_runner.py": "7f4f9842c3d9c9af",
+  "multi_runner.py": "55ba6ac89ee3d682",
+  "stack.py": "59f1b21abae1e343",
+  "te.py": "3080f386ea398015",
+  "fe.py": "979169901d0c6e9a",
+  "col_groups.json": "51f9b7c8543fd5d5",
+  "EXPERIMENTS.md": "78ded8a3c02a8a7c",
+  "README.md": "26b74fff33a44cf3",
+  "xgb_seeds.py": "8c96aa7d29293b0d",
+  "run_all.py": "ccda6e889039271f",
+  "ensemble.py": "411eb4ea24f5e8b3",
+  "nn_dcn_v1.py": "8503806d2ed43912"
+ },
+ "env_kaggle": {
+  "xgboost": "3.4.1",
+  "catboost": "1.2.10",
+  "torch": "2.11.0+cu130"
+ }
+}
